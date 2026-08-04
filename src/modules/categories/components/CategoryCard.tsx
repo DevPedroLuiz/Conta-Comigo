@@ -27,7 +27,7 @@ export function CategoryCard({ category, onDelete }: CategoryCardProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="flex items-center justify-between p-4 rounded-lg border border-zinc-800 bg-[#0c0c0e] hover:border-zinc-700 transition-colors">
+    <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-card hover:border-border transition-colors">
       <div className="flex items-center gap-4">
         <div 
           className="flex items-center justify-center h-10 w-10 rounded-full"
@@ -36,13 +36,13 @@ export function CategoryCard({ category, onDelete }: CategoryCardProps) {
           {getCategoryIcon(category.icon)}
         </div>
         <div>
-          <h3 className="font-medium text-zinc-100 flex items-center gap-2">
+          <h3 className="font-medium text-muted-foreground flex items-center gap-2">
             {category.name}
             {category.is_default && (
-              <span className="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded-full font-medium tracking-wide">PADRÃO</span>
+              <span className="text-[10px] bg-card text-muted-foreground px-1.5 py-0.5 rounded-full font-medium tracking-wide">PADRÃO</span>
             )}
           </h3>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {category.type === 'INCOME' ? 'Receita' : 'Despesa'}
           </p>
         </div>
@@ -53,7 +53,7 @@ export function CategoryCard({ category, onDelete }: CategoryCardProps) {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-8 w-8 text-zinc-400 hover:text-white"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
             onClick={() => navigate(`/categories/${category.id}/edit`)}
           >
             <Pencil className="h-3.5 w-3.5" />
@@ -61,7 +61,7 @@ export function CategoryCard({ category, onDelete }: CategoryCardProps) {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-8 w-8 text-zinc-400 hover:text-destructive"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive dark:text-red-400"
             onClick={() => onDelete(category.id)}
           >
             <Trash2 className="h-3.5 w-3.5" />

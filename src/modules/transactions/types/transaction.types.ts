@@ -1,10 +1,15 @@
 export type TransactionType = 'INCOME' | 'EXPENSE';
+export type TransactionStatus = 'PAID' | 'UNPAID';
 
 export interface Transaction {
   id: string;
   user_id: string;
-  account_id: string;
+  account_id?: string;
+  credit_card_id?: string;
   category_id: string;
+  recurrence_id?: string;
+  installment_id?: string;
+  status: TransactionStatus;
   type: TransactionType;
   description: string;
   amount: number;
@@ -21,6 +26,10 @@ export interface Transaction {
     icon: string;
   };
   accounts?: {
+    id: string;
+    name: string;
+  };
+  credit_cards?: {
     id: string;
     name: string;
   };

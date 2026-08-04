@@ -16,7 +16,8 @@ export class TransactionRepository {
       .select(`
         *,
         categories (id, name, color, icon),
-        accounts (id, name)
+        accounts (id, name),
+        credit_cards (id, name)
       `)
       .eq('user_id', filters.userId)
       .order('date', { ascending: false });
@@ -35,8 +36,8 @@ export class TransactionRepository {
     }
 
     const { data, error } = await query;
-
     if (error) throw error;
+    
     return data as Transaction[];
   }
 
@@ -56,7 +57,7 @@ export class TransactionRepository {
     return data as Transaction;
   }
 
-  async createTransaction(transaction: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>): Promise<Transaction> {
+  async createTransaction(transaction: Omit<Transaction, 'id' | 'created_at' | 'updated_at' | 'categories' | 'accounts' | 'credit_cards'>): Promise<Transaction> {
     const { data, error } = await supabase
       .from('transactions')
       .insert(transaction)
@@ -65,6 +66,16 @@ export class TransactionRepository {
 
     if (error) throw error;
     return data as Transaction;
+  }
+  
+  async createMultipleTransactions(transactions: Omit<Transaction, 'id' | 'created_at' | 'updated_at' | 'categories' | 'accounts' | 'credit_cards'>[]): Promise<Transaction[]> {
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert(transactions)
+      .select();
+
+    if (error) throw error;
+    return data as Transaction[];
   }
 
   async updateTransaction(userId: string, transactionId: string, updates: Partial<Transaction>): Promise<Transaction> {
@@ -89,11 +100,20 @@ export class TransactionRepository {
 
     if (error) throw error;
   }
+  
+  async createTransactionInstallment(userId: string, totalAmount: number, count: number) {
+    const { data, error } = await supabase
+      .from('transaction_installments')
+      .insert({ user_id: userId, total_amount: totalAmount, installments_count: count })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
 }
 
 export const transactionRepository = new TransactionRepository();
 
-// Add these to the end
 export class ReferenceRepository {
   async getAccounts(userId: string) {
     const { data, error } = await supabase
@@ -114,5 +134,16 @@ export class ReferenceRepository {
     if (error) throw error;
     return data;
   }
+  
+  async getCreditCards(userId: string) {
+    const { data, error } = await supabase
+      .from('credit_cards')
+      .select('id, name')
+      .eq('user_id', userId)
+      .order('name');
+    if (error) throw error;
+    return data;
+  }
 }
+
 export const referenceRepository = new ReferenceRepository();

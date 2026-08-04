@@ -48,7 +48,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                     </p>
                   </div>
                 </div>
-                <div className={`font-medium ${isIncome ? 'text-emerald-500' : 'text-foreground'}`}>
+                <div className={`font-medium ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'}`}>
                   {isIncome ? '+' : '-'}
                   {new Intl.NumberFormat('pt-BR', {
                     style: 'currency',

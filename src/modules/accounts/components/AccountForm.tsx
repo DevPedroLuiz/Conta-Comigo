@@ -38,7 +38,7 @@ export function AccountForm({ initialData, onSubmit, isLoading }: AccountFormPro
           placeholder="Ex: Banco Inter, Carteira..."
           {...register('name')}
         />
-        {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+        {errors.name && <p className="text-sm text-destructive dark:text-red-400">{errors.name.message}</p>}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -59,7 +59,7 @@ export function AccountForm({ initialData, onSubmit, isLoading }: AccountFormPro
               <SelectItem value="CASH">Dinheiro/Carteira</SelectItem>
             </SelectContent>
           </Select>
-          {errors.type && <p className="text-sm text-destructive">{errors.type.message}</p>}
+          {errors.type && <p className="text-sm text-destructive dark:text-red-400">{errors.type.message}</p>}
         </div>
 
         <div className="space-y-2">
@@ -77,14 +77,14 @@ export function AccountForm({ initialData, onSubmit, isLoading }: AccountFormPro
               <SelectItem value="EUR">Euro (EUR)</SelectItem>
             </SelectContent>
           </Select>
-          {errors.currency && <p className="text-sm text-destructive">{errors.currency.message}</p>}
+          {errors.currency && <p className="text-sm text-destructive dark:text-red-400">{errors.currency.message}</p>}
         </div>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="initial_balance">Saldo Inicial</Label>
         <div className="relative">
-          <span className="absolute left-3 top-2.5 text-zinc-500">
+          <span className="absolute left-3 top-2.5 text-muted-foreground">
             {currency === 'BRL' ? 'R$' : currency === 'USD' ? '$' : '€'}
           </span>
           <Input
@@ -96,7 +96,7 @@ export function AccountForm({ initialData, onSubmit, isLoading }: AccountFormPro
             {...register('initial_balance')}
           />
         </div>
-        {errors.initial_balance && <p className="text-sm text-destructive">{errors.initial_balance.message}</p>}
+        {errors.initial_balance && <p className="text-sm text-destructive dark:text-red-400">{errors.initial_balance.message}</p>}
       </div>
 
       <div className="flex gap-4 justify-end">

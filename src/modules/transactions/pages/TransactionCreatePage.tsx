@@ -14,6 +14,7 @@ export function TransactionCreatePage() {
   const [submitting, setSubmitting] = useState(false);
   const [accounts, setAccounts] = useState<{ id: string; name: string }[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string; type: string }[]>([]);
+  const [creditCards, setCreditCards] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     async function loadFormReferences() {
@@ -25,6 +26,7 @@ export function TransactionCreatePage() {
       } else if (data) {
         setAccounts(data.accounts || []);
         setCategories(data.categories || []);
+        setCreditCards(data.creditCards || []);
       }
       setLoading(false);
     }
@@ -63,10 +65,11 @@ export function TransactionCreatePage() {
         <p className="text-muted-foreground">Preencha os detalhes da sua movimentação financeira.</p>
       </div>
 
-      <div className="rounded-lg border border-zinc-800 bg-[#0c0c0e] p-6">
+      <div className="rounded-lg border border-border bg-card p-6">
         <TransactionForm 
           accounts={accounts} 
           categories={categories} 
+          creditCards={creditCards}
           onSubmit={handleSubmit} 
           isLoading={submitting} 
         />

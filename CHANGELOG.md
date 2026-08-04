@@ -8,6 +8,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **OAuth:** Autenticação Social via Google OAuth.
+- Login com Google OAuth via Supabase Auth.
+- Botões Google com estado de loading.
+- Bloqueio contra múltiplos cliques.
+- Feedback visual durante redirecionamento.
+- Integração com Onboarding.
+- Preenchimento automático de full_name e avatar_url utilizando metadata retornado pelo Google.
+- Atualização documental relacionada ao fluxo de autenticação.
+- **Sprint 10:** Orçamentos e Calendário Financeiro.
+- CRUD de orçamentos (budgets).
+- Controle de limite por categoria.
+- Cálculo dinâmico de gastos no mês.
+- Barra de progresso de consumo de orçamento (Progress component).
+- Calendário financeiro mostrando fluxo passado e previsão de gastos futuros e assinaturas.
+- Débito Técnico: Evolução futura da projeção de parcelamentos e faturas de cartão no calendário.
+- **Sprint 9.1:** Estabilização Financeira.
+- Correção do cálculo automático de faturas baseado no dia de fechamento e transações.
+- Implementação do fluxo de pagamento de fatura gerando débito em conta bancária e registro na tabela `invoice_payments`.
+- Integração real do fluxo de assinaturas, gerando `transaction_recurrences` e transações associadas.
+- **Sprint 9:** Cartões de Crédito, Faturas, Parcelamentos, Recorrências e Assinaturas.
+- Módulo `credit-cards` contendo CRUD para gestão de cartões de crédito (Nome, Limite, Dia de Vencimento, Dia de Fechamento).
+- Faturas dinâmicas renderizadas em `/credit-cards/:id/invoices`.
+- Criação e edição de transações suportando seleção da fonte de pagamento (`account_id` ou `credit_card_id`).
+- Criação de transações suportando compras parceladas (`installments_count`).
+- Assinaturas e gerencialmente de recorrências (`subscriptions`).
+- Débito Técnico: A execução e geração automática das faturas e transações mensais por Cron Job / Edge Function foi registrada como melhoria futura. Melhorias futuras também se aplicam para categorias financeiras.
 - **Sprint 8:** Relatórios Financeiros.
 - Módulo `reports` criado com `ReportService`, `ReportRepository`, e `Types` para consolidar o fluxo de caixa.
 - `ReportsPage`: Página dedicada a relatórios financeiros avançados.

@@ -17,7 +17,7 @@ Abaixo está o detalhamento dos Épicos do sistema.
 
 ### Épico 1: Autenticação e Segurança
 *   **Feature 1.1:** Login / Cadastro via E-mail e Senha.
-*   **Feature 1.2:** Login Social (Google).
+*   **Feature 1.2:** Login Social (Google). [DONE]
 *   **Feature 1.3:** Recuperação de Senha.
 
 ### Épico 2: Estrutura Base (Contas e Categorias)
@@ -29,9 +29,11 @@ Abaixo está o detalhamento dos Épicos do sistema.
 *   **Feature 3.2:** Lançamentos Recorrentes e Parcelados.
 *   **Feature 3.3:** Transferências entre Contas.
 
-### Épico 4: Cartões de Crédito
-*   **Feature 4.1:** Cadastro e Gestão de Cartões.
-*   **Feature 4.2:** Faturas e Pagamento de Faturas.
+### Épico 4: Cartões de Crédito [DONE]
+*   **Feature 4.1:** Cadastro e Gestão de Cartões. (Concluído)
+*   **Feature 4.2:** Faturas e Pagamento de Faturas. (Concluído)
+*   **Feature 4.3:** Compras no crédito e parcelamentos. (Concluído)
+*   *Nota:* Motor de recorrências automáticas via Cron/Edge Function permanece como melhoria futura.
 
 ### Épico 5: Dashboard e Relatórios
 *   **Feature 5.1:** Dashboard Consolidado (Saldos e Gráfico Base).
@@ -39,7 +41,9 @@ Abaixo está o detalhamento dos Épicos do sistema.
 
 ### Épico 6: Inteligência e Planejamento
 *   **Feature 6.1:** Objetivos Financeiros (Metas).
-*   **Feature 6.2:** Orçamentos por Categoria.
+*   **Feature 6.2:** Orçamentos por Categoria. [DONE]
+*   **Feature 6.3:** Calendário financeiro. [DONE]
+*   *Nota:* Melhorias futuras de projeção avançada de parcelamentos e cartões no calendário.
 
 ### Épico 7: Investimentos
 *   **Feature 7.1:** Carteira de Ativos.
@@ -65,11 +69,12 @@ Abaixo está a decomposição das principais Features em Histórias de Usuário 
 *   **Prioridade:** Must Have
 *   **Estimativa:** 5 Pontos
 
-**US-02: Login Social (Google)**
+**US-02: Login Social (Google) [CONCLUÍDA]**
 *   *Como* usuário frequente
 *   *Quero* fazer login com apenas um clique via Google
 *   *Para* acessar minha conta rapidamente sem lembrar senhas.
 *   **Critérios de Aceite:** Integração OAuth Google configurada no Supabase; Redirecionamento correto após sucesso.
+*   **Status:** Concluída utilizando Supabase Auth OAuth Google.
 *   **Prioridade:** Should Have
 *   **Estimativa:** 3 Pontos
 

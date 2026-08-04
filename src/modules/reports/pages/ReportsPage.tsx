@@ -64,37 +64,37 @@ export function ReportsPage() {
         <div className="space-y-6">
           {/* Summary Cards */}
           <div className="grid gap-4 md:grid-cols-3">
-            <Card className="bg-[#0c0c0e] border-zinc-800">
+            <Card className="bg-card border-border">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between space-y-0 pb-2">
-                  <p className="text-sm font-medium text-zinc-400">Total de Receitas</p>
-                  <TrendingUp className="h-4 w-4 text-emerald-500" />
+                  <p className="text-sm font-medium text-muted-foreground">Total de Receitas</p>
+                  <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <div className="text-2xl font-bold text-white">
+                <div className="text-2xl font-bold text-foreground">
                   R$ {data.summary.totalIncome.toFixed(2)}
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="bg-[#0c0c0e] border-zinc-800">
+            <Card className="bg-card border-border">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between space-y-0 pb-2">
-                  <p className="text-sm font-medium text-zinc-400">Total de Despesas</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total de Despesas</p>
                   <TrendingDown className="h-4 w-4 text-rose-500" />
                 </div>
-                <div className="text-2xl font-bold text-white">
+                <div className="text-2xl font-bold text-foreground">
                   R$ {data.summary.totalExpense.toFixed(2)}
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="bg-[#0c0c0e] border-zinc-800">
+            <Card className="bg-card border-border">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between space-y-0 pb-2">
-                  <p className="text-sm font-medium text-zinc-400">Saldo Líquido</p>
+                  <p className="text-sm font-medium text-muted-foreground">Saldo Líquido</p>
                   <Wallet className="h-4 w-4 text-primary" />
                 </div>
-                <div className={`text-2xl font-bold ${data.summary.netBalance >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                <div className={`text-2xl font-bold ${data.summary.netBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
                   R$ {data.summary.netBalance.toFixed(2)}
                 </div>
               </CardContent>

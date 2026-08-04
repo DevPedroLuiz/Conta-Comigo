@@ -80,11 +80,11 @@ export function GoalEditPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4">
       <div className="flex flex-col gap-2">
-        <h2 className="text-3xl font-bold tracking-tight text-white">Editar Meta</h2>
-        <p className="text-zinc-400">Atualize as informações da sua meta.</p>
+        <h2 className="text-3xl font-bold tracking-tight text-foreground">Editar Meta</h2>
+        <p className="text-muted-foreground">Atualize as informações da sua meta.</p>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-[#0c0c0e] p-6">
+      <div className="rounded-xl border border-border bg-card p-6">
         {initialData && (
           <GoalForm 
             initialData={initialData}

@@ -34,7 +34,7 @@ export function CategoryCreatePage() {
         <p className="text-muted-foreground">Crie uma nova categoria para organizar suas transações.</p>
       </div>
 
-      <div className="rounded-lg border border-zinc-800 bg-[#0c0c0e] p-6">
+      <div className="rounded-lg border border-border bg-card p-6">
         <CategoryForm 
           onSubmit={handleSubmit} 
           isLoading={submitting} 

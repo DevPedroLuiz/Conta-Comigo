@@ -18,10 +18,12 @@ import { Spinner } from "../../../core/ui/components/spinner"
 type LoginFormValues = z.infer<typeof loginSchema> & { rememberMe?: boolean }
 
 export function LoginPage() {
-  const { login } = useAuth()
+  const { login, loginWithGoogle } = useAuth()
+  
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [isGoogleLoading, setIsGoogleLoading] = React.useState(false)
   
   const {
     register,
@@ -36,6 +38,19 @@ export function LoginPage() {
       rememberMe: false
     },
   })
+
+  const handleGoogleLogin = async () => {
+    if (isSubmitting || isGoogleLoading) return;
+    setIsGoogleLoading(true);
+    setError(null);
+    try {
+      await loginWithGoogle();
+      // Don't set isGoogleLoading to false as it redirects
+    } catch (err: any) {
+      toast.error("Erro ao fazer login com Google");
+      setIsGoogleLoading(false);
+    }
+  }
 
   const onSubmit = async (data: LoginFormValues) => {
     setError(null)
@@ -78,7 +93,7 @@ export function LoginPage() {
                 aria-invalid={!!errors.email}
               />
               {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
+                <p className="text-sm text-destructive dark:text-red-400">{errors.email.message}</p>
               )}
             </div>
             
@@ -115,7 +130,7 @@ export function LoginPage() {
                 </Button>
               </div>
               {errors.password && (
-                <p className="text-sm text-destructive">{errors.password.message}</p>
+                <p className="text-sm text-destructive dark:text-red-400">{errors.password.message}</p>
               )}
             </div>
 
@@ -154,8 +169,20 @@ export function LoginPage() {
               </div>
             </div>
 
-            <Button variant="outline" type="button" className="w-full" disabled={isSubmitting}>
-              Google
+            <Button variant="outline" type="button" className="w-full" disabled={isSubmitting || isGoogleLoading} onClick={handleGoogleLogin}>
+              {isGoogleLoading ? (
+                <>
+                  <Spinner className="mr-2 h-4 w-4" />
+                  Redirecionando...
+                </>
+              ) : (
+                <>
+                  <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                    <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
+                  </svg>
+                  Continuar com Google
+                </>
+              )}
             </Button>
           </form>
         </CardContent>

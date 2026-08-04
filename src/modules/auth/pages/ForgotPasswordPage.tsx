@@ -50,7 +50,7 @@ export function ForgotPasswordPage() {
         <Card className="w-full max-w-md text-center">
           <CardHeader>
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
-              <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+              <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
             </div>
             <CardTitle className="text-2xl font-bold tracking-tight">E-mail enviado</CardTitle>
             <CardDescription>
@@ -99,7 +99,7 @@ export function ForgotPasswordPage() {
                 aria-invalid={!!errors.email}
               />
               {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
+                <p className="text-sm text-destructive dark:text-red-400">{errors.email.message}</p>
               )}
             </div>
             

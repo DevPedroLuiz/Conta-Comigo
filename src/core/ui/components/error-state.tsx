@@ -26,7 +26,7 @@ export function ErrorState({
     >
       <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-          <AlertCircle className="h-8 w-8 text-destructive" />
+          <AlertCircle className="h-8 w-8 text-destructive dark:text-red-400" />
         </div>
         <h2 className="mt-6 text-xl font-semibold text-foreground">{title}</h2>
         <p className="mb-6 mt-2 text-center text-sm font-normal leading-6 text-muted-foreground">

@@ -1,0 +1,1650 @@
+
+=== AI_DEVELOPMENT_GUIDE.md ===
+# Guia de Desenvolvimento Orientado por IA (AI Development Guide)
+
+Este documento atua como o manual definitivo e conjunto de regras estritas (System Prompts/Constraints) para qualquer agente de Inteligência Artificial, LLM ou assistente virtual que atue no desenvolvimento do ecossistema **Conta Comigo**. 
+
+A leitura e obediência a este documento são **obrigatórias** antes da execução de qualquer alteração no código-fonte.
+
+---
+
+## 1. Regras de Ouro (Obrigações Primárias)
+* **Sempre consulte a documentação fundacional:** Antes de escrever a primeira linha de código, você deve obrigatoriamente ler o contexto da funcionalidade nos arquivos `PRD.md`, `ARCHITECTURE.md`, `DATABASE.md`, `API.md`, `DESIGN_SYSTEM.md`, `WIREFRAMES.md` e `BACKLOG.md`.
+* **Atualize a documentação continuamente:** Ao finalizar qualquer funcionalidade, atualização de banco de dados ou mudança de arquitetura, atualize imediatamente a documentação correspondente. A documentação deve refletir 100% da realidade do código.
+* **Nunca altere arquivos fora do escopo:** Respeite rigorosamente a solicitação do usuário. Modifique apenas os arquivos necessários para entregar a funcionalidade exigida, minimizando o risco de efeitos colaterais.
+* **Pare em caso de ambiguidade:** Se a solicitação do usuário conflitar com a documentação oficial ou se faltarem detalhes críticos, não adivinhe. Pare a execução e peça esclarecimentos ao usuário.
+
+---
+
+## 2. Qualidade e Padrões de Código
+* **Tipagem Forte e Estrita:** Nunca utilize `any` em TypeScript. Tipos, Interfaces e Schemas (Zod) devem ser exatos, utilizando Generics quando necessário e protegendo contra nulos e indefinidos (`strict: true`).
+* **Clean Architecture e SOLID:** O código deve respeitar a separação de responsabilidades (Componentes de UI, Hooks lógicos, Repositories de dados). Aplique os princípios SOLID rigorosamente (Especialmente Responsabilidade Única e Inversão de Dependência).
+* **DRY (Don't Repeat Yourself):** Nunca duplique lógica. Se um cálculo ou regra for utilizada em mais de um lugar, abstraia para uma função utilitária global (`/core/utils/`).
+* **KISS (Keep It Simple, Stupid):** Escreva código claro, legível e direto. Evite abstrações prematuras ou engenharia excessiva (Overengineering).
+
+---
+
+## 3. Ecossistema e Arquitetura Monorepo
+* **Compatibilidade Web e Mobile:** O ecossistema compartilha a mesma inteligência. Nunca introduza bibliotecas exclusivas de DOM (ex: `window.localStorage`) na camada de Serviços/Hooks sem o devido isolamento, pois isso quebrará o aplicativo React Native.
+* **Reaproveitamento de Componentes:** Verifique sempre o pacote de UI compartilhado (`/core/ui`) antes de criar um novo botão, modal ou input. Sempre reutilize componentes compartilhados.
+* **Nunca remova funcionalidades existentes sem documentação:** Nenhuma feature atual deve ser deletada ou comentada sem que isso seja uma ordem explícita do usuário e esteja documentado.
+
+---
+
+## 4. Banco de Dados e APIs
+* **Atualização Obrigatória do `DATABASE.md`:** É estritamente proibido alterar estruturas de tabelas, criar índices, ou modificar Triggers no Supabase sem atualizar a modelagem no documento `DATABASE.md`.
+* **Segurança por Default (RLS):** Toda nova tabela DEVE ter suas políticas de Row Level Security (RLS) configuradas para proteger o isolamento dos dados do usuário. O backend nunca deve confiar no input do cliente sem validação.
+* **Validação em Duas Camadas:** Zod no Frontend (para UX rápida) e Tipagem forte/Constraints no PostgreSQL (para garantia de integridade).
+
+---
+
+## 5. Design System e Interface Visuais
+* **Fidelidade ao Design System:** Nunca crie telas, cores, espaçamentos ou tipografias fora dos padrões estipulados no `DESIGN_SYSTEM.md`. O uso de Tailwind classes deve refletir os *design tokens* oficias da aplicação.
+* **Responsividade Absoluta:** O frontend Web deve ser construído seguindo `Mobile-First`. Use os breakpoints do Tailwind (`sm:`, `md:`, `lg:`) para garantir compatibilidade impecável em qualquer tela.
+* **Acessibilidade (A11y):** Sempre preserve a acessibilidade. Adicione `aria-labels` a botões icônicos, mantenha alto contraste e garanta suporte à navegação por teclado (`focus:ring`).
+
+---
+
+## 6. Performance, Segurança e Testes
+* **Testes para Regras Críticas:** Lógicas matemáticas (ex: calculadoras de parcelamento, consolidação de juros) DEVEM ser cobertas por testes unitários robustos (Jest/Vitest) antes de serem integradas.
+* **Performance Consciente:** Evite renderizações desnecessárias. Use paginação e scroll virtual para listas longas. Faça cache agressivo (via TanStack Query) para dados estáticos.
+* **Prevenção contra Falhas de Rede:** Considere que o usuário sempre pode ficar offline. Prepare os componentes para lidar com `Error States` e `Loading States` de forma elegante (Skeleton loading).
+
+---
+
+## 7. Controle de Versão e Operações no Código
+* **Edições Cirúrgicas (Surgical Edits):** Como IA, utilize ferramentas de edição precisa de arquivos em vez de tentar sobrescrever arquivos inteiros e causar perdas de código.
+* **Conventional Commits:** Todas as mensagens de commit ou resumos de alteração devem seguir o padrão: `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`.
+
+---
+
+## 8. Regras Adicionais para o Agente IA
+* **Sem Código "Mockado" ou Placeholders Temporários:** Quando construir integrações, faça integrações reais. Nunca adicione "TODO: Implementar API" a menos que solicitado. Conecte-se aos SDKs oficiais indicados.
+* **Logs e Auditoria Silenciosa:** Siga os padrões de erro do projeto, sem sujar o console (`console.log`) do navegador desnecessariamente na versão final. Use ferramentas apropriadas de Error Boundary.
+
+
+=== API.md ===
+# Documentação da Camada de Comunicação (API e Serviços) - Conta Comigo
+
+## 1. Filosofia da API
+
+O Conta Comigo não utiliza uma API REST tradicional desenvolvida do zero (ex: Node.js/Express). Em vez disso, adota a filosofia de **Backend as a Service (BaaS)** impulsionada pelo Supabase. Toda a comunicação ocorre diretamente entre os clientes (Web/Mobile) e a infraestrutura do Supabase.
+
+*   **Supabase Client (SDK):** Principal método de comunicação. O frontend fará chamadas diretas ao banco (via PostgREST under the hood), garantindo respostas ultrarrápidas.
+*   **Edge Functions:** Serão utilizadas APENAS para lógicas restritas que não podem ocorrer no cliente (ex: Webhooks bancários, agendamentos/cron jobs para recorrências, disparo em massa de emails, integrações externas sensíveis).
+*   **Realtime:** Padrão Pub/Sub. Clientes assinam canais baseados no banco de dados para receber mutações (INSERTS/UPDATES) de forma passiva, atualizando a interface sem polling.
+*   **Storage:** APIs específicas do Supabase para upload e gerenciamento de mídias (comprovantes e avatares), utilizando buckets protegidos por Row Level Security (RLS).
+
+---
+
+## 2. Fluxo de Comunicação
+
+```text
+[Cliente Web / Mobile] 
+   |
+   | (1) Login/OAuth (Supabase Client Auth)
+   v
+[Supabase Auth] ---> Retorna JWT (Acesso e Refresh Token)
+   |
+   | (2) Requisições de Dados (SDK injetando JWT)
+   v
+[PostgREST / Supabase] ---> Valida JWT + Row Level Security (RLS)
+   |
+   |---> (Sucesso) Retorna Dados do PostgreSQL
+   |
+   | (3) Subscrição de Websockets (Supabase Realtime)
+   v
+[Cliente escuta eventos] <--- PostgreSQL dispara mutações
+   |
+   | (4) Upload de Arquivos (Storage API)
+   v
+[Supabase Storage] ---> Valida RLS e salva arquivo no Bucket S3
+```
+
+---
+
+## 3. Organização da Camada de Serviços
+
+No frontend (simulando estrutura de Monorepo), a camada de dados será isolada da interface visual.
+
+*   **`services/`:** Configuração base dos clientes (instância do `supabase` client). Define a base de conexão.
+*   **`repositories/`:** Funções puras que encapsulam as consultas diretas ao Supabase (ex: `fetchTransactions`, `createAccount`). Separam o SDK da inteligência de estado.
+*   **`hooks/`:** Abstrações customizadas do React (ex: `useTransactions`, `useProfile`) que combinam os repositories com o TanStack Query.
+*   **`queries/` (TanStack Query):** Responsáveis pela leitura (GET). Definem as chaves de cache (Query Keys) e tempos de Stale.
+*   **`mutations/` (TanStack Query):** Responsáveis pela escrita (POST/PUT/DELETE). Onde configuramos os *Optimistic Updates* e as invalidações de cache (`queryClient.invalidateQueries`).
+*   **`providers/`:** Contextos React para injetar estados globais críticos (como o status de Autenticação e a Sessão ativa do usuário).
+
+---
+
+## 4. Especificação dos Módulos
+
+### Autenticação & Perfil
+*   **Objetivo:** Identificar o usuário, manter sessões seguras e armazenar preferências.
+*   **Operações:** Sign Up, Sign In (Email/Senha, Google OAuth), Sign Out, Reset de Senha, Atualizar Perfil.
+*   **Fluxo de comunicação:** Client -> Supabase Auth -> Tabela `profiles` via Triggers de criação de usuário.
+*   **Validações:** Regras robustas com Zod (força de senha, regex de e-mail).
+*   **Erros esperados:** "Credenciais inválidas", "E-mail já cadastrado", "Token expirado".
+
+### Contas & Categorias
+*   **Objetivo:** Estrutura base onde os saldos existem e como as transações são classificadas.
+*   **Operações:** Listar, Criar, Editar, Inativar (Soft Delete).
+*   **Eventos Realtime:** Se o saldo da conta for atualizado via Mobile, a tela Web reflete imediatamente.
+*   **Validações:** Nome não pode ser vazio, Saldo Inicial deve ser um número válido.
+*   **Erros esperados:** "Conta vinculada a transações não pode ser excluída fisicamente."
+
+### Transações (Receitas, Despesas e Transferências)
+*   **Objetivo:** O motor principal de finanças. Registro do fluxo de caixa e movimentações financeiras.
+*   **Operações:** Criar (única, parcelada, recorrente), Listar com paginação/filtros, Atualizar status, Transferir saldos.
+*   **Fluxo de comunicação:** Mutações no cliente são despachadas pro Supabase via SDK. Transações complexas (Transferências) executam RPCs (Remote Procedure Calls) no banco para garantir atomicidade.
+*   **Eventos Realtime:** Inserções e exclusões engatilham atualização de saldos e gráficos.
+*   **Erros esperados:** "Data inválida", "Conta não encontrada".
+
+### Cartões & Faturas
+*   **Objetivo:** Gerenciamento do crédito rotativo do usuário.
+*   **Operações:** Criar cartão, Listar faturas por mês, Lançar despesa no crédito, Pagar Fatura.
+*   **Fluxo de comunicação:** Transações atreladas a cartões são agrupadas lógicamente nas faturas através de agrupamento no banco de dados.
+
+### Investimentos & Dividendos
+*   **Objetivo:** Gerenciamento macro do patrimônio do usuário e rentabilidade.
+*   **Operações:** Cadastrar ativo financeiro, Registrar Compra/Venda, Receber provento.
+*   **Validações:** Quantidades e Valores não podem ser negativos.
+
+### Orçamentos, Objetivos e Assinaturas
+*   **Objetivo:** Gamificação da poupança e estabelecimento de limites de gastos, bem como previsibilidade.
+*   **Operações:** Criar metas, Alocar/resgatar saldos de metas, Definir limites orçamentários por categoria.
+*   **Eventos Realtime:** O orçamento emite notificação quando uma despesa excede a margem (ex: 90% do orçamento de Alimentação atingido).
+
+### Empréstimos, Relatórios e Notificações
+*   **Objetivo:** Visões detalhadas do fluxo de dados e acompanhamento de obrigações de longo prazo.
+*   **Operações:** Extrair JSON estruturado para renderizar gráficos, Configurar alertas.
+*   **Fluxo de comunicação:** Consultas muito densas e complexas poderão utilizar Views Materializadas ou Edge Functions para poupar processamento no navegador/aparelho.
+
+---
+
+## 5. Upload de Arquivos
+
+*   **Comprovantes e Fotos:** Transações poderão ter notas fiscais ou fotos anexadas. Usuários poderão ter avatares.
+*   **Storage:** Uso do Supabase Storage. Serão criados dois *Buckets*:
+    *   `avatars` (Público, fácil acesso via URL gerada)
+    *   `receipts` (Privado, restrito via RLS).
+*   **Permissões:** Para baixar um comprovante do bucket privado, a requisição passa pelas políticas RLS que verificam se o `auth.uid()` é dono do comprovante.
+*   **Versionamento:** A API do cliente gerará UUIDs aleatórios na subida do arquivo (`/receipts/{user_id}/{uuid}.jpg`), evitando sobrescrita acidental ou cache estagnado em CDNs.
+
+---
+
+## 6. Sincronização
+
+A sincronização entre Web e Android ocorrerá seguindo princípios de reatividade local e remota.
+
+*   **Realtime:** Através de canais WebSocket assinados na inicialização do aplicativo (Supabase Realtime `postgres_changes`).
+*   **Offline:** O Mobile implementa modo Offline. A camada de serviços escreverá num SQLite local, de forma instantânea (permitindo uso imediato do aplicativo na rua sem 4G/5G).
+*   **Fila de sincronização:** Mutacões offline vão para uma Fila Local (Sync Queue). Um Job em background (Worker) monitora o status de rede, esvaziando a fila quando conectado.
+*   **Conflitos e Reconciliação:** A reconciliação será resolvida no Supabase através da estratégia **Last Write Wins** (LWW) baseada em um payload com a data da modificação no dispositivo. Em caso de edição simultânea sem internet, vence quem enviar a atualização mais recente.
+*   **Retry Automático:** TanStack Query gerencia *retries* exponenciais padrão caso a conexão oscile durante o envio de informações não-críticas na Web.
+
+---
+
+## 7. Segurança
+
+*   **JWT & Refresh Token:** Supabase emite JWT de curta duração. O SDK renova em background automaticamente utilizando o Refresh Token salvo nos cookies seguros (Web) ou Keychain (Mobile).
+*   **RLS (Row Level Security):** Única e definitiva camada de proteção. Os endpoints "livres" do SDK rejeitarão comandos e selects para tudo que não tiver relação explícita com o JWT enviado no header (`Authorization: Bearer <jwt>`).
+*   **Rate Limit:** Defesas nativas de DDOS e rate limit aplicadas na Edge (Vercel e Gateway do Supabase).
+*   **Validação:** Inputs obrigatoriamente passados pelo Zod no Client antes de acionar a camada HTTP para reduzir overhead e proteger contra dados malformados.
+
+---
+
+## 8. Tratamento de Erros
+
+*   **Padronização:** Exceções do SDK Supabase (PostgREST errors) serão envelopadas e parseadas por funções utilitárias (ex: `handleApiError()`).
+*   **Códigos:** Traduções padronizadas. O código "23505" de violação *Unique Constraint* vira um erro legível do tipo `DuplicateRecordError` na UI.
+*   **Feedback para usuário:** Componentes padronizados: Toasts vermelhos para erros em Background, formulários com estados de erro amigáveis para campos inválidos (Zod resolver).
+*   **Logs:** Utilização de `console.error` em dev. Estrutura desenhada para ser "pluggable" num Sentry da vida caso a escala chegue ao nível corporativo.
+
+---
+
+## 9. Estratégia de Cache
+
+O `TanStack Query` será o motor dominante para evitar repetições desnecessárias.
+
+*   **Invalidation:** Ações como `createTransaction` chamam `queryClient.invalidateQueries(['transactions'])`, forçando refetch do que for afetado de modo transparente ao usuário.
+*   **Prefetch:** Interações preditivas (hover no botão de Configurações, scroll chegando perto de relatórios de um ano anterior) dispararão o `queryClient.prefetchQuery`.
+*   **Optimistic Updates:** Excluir um Cartão removerá ele da lista na UI instantaneamente. O request é feito silenciosamente. Em caso de falha de rede, a interface fará um Rollback e recolocará o cartão na tela emitindo o alerta.
+*   **Persistência Offline (Web/Mobile):** Utilização do plugin `persister` do TanStack Query para despejar o cache no AsyncStorage/IndexedDB, acelerando o tempo do "Primeiro Render" (TTFB perceptivo zero).
+
+---
+
+## 10. Roadmap da API
+
+*   **Fase 1:** Setup dos Clientes, Providers de Autenticação, Proteção RLS de Auth e Sessões (Tratamento de JWT).
+*   **Fase 2:** Desenvolvimento das Repositories CRUD iniciais (Contas e Categorias). Modelagem do Cache TanStack.
+*   **Fase 3:** Motor Transacional (Repositories complexas, Paginação Cursor, Filtros). Otimistic Updates aplicados.
+*   **Fase 4:** Modelagem de Buckets (Storage) e implementação do serviço de upload (Comprovantes e Perfil).
+*   **Fase 5:** Implementação dos canais Supabase Realtime para notificação de atualizações cruzadas.
+*   **Fase 6:** Estruturação pesada para Sincronização Mobile Offline (Adaptações React Native) e Fila de Mutação.
+*   **Fase 7:** Edge Functions (Módulos de agendamento e faturas complexas).
+
+
+=== ARCHITECTURE.md ===
+# Documento de Arquitetura de Software (SAD) - Conta Comigo
+
+## 1. Visão Geral da Arquitetura
+
+O ecossistema do **Conta Comigo** baseia-se em uma arquitetura distribuída, orientada a serviços gerenciados (BaaS - Backend as a Service) e Serverless. O objetivo principal é garantir alta disponibilidade, escalabilidade instantânea e sincronização em tempo real entre os clientes Web e Mobile, mantendo uma base de código organizada e compartilhável.
+
+### Diagrama Textual de Comunicação
+
+```text
+[Repositório: GitHub] 
+       | (CI/CD / Webhooks)
+       v
++------------------+         +---------------------------------------+
+|  Vercel (Host)   |         |         Supabase (Backend BaaS)       |
+|                  |         |                                       |
+| [Web / Next.js]  |<--API-->|  [Auth] (JWT / Sessões / Google)      |
++------------------+   WSS   |  [PostgreSQL] (Dados / RLS)           |
+          ^             |    |  [Storage] (Comprovantes / Avatares)  |
+          |             |    |  [Realtime] (WebSockets Sync)         |
+          |             |    |  [Edge Functions] (Lógicas complexas) |
+     (Navegador)        |    +---------------------------------------+
+                        |                      ^
+                        |                      | API / WSS
+                        v                      |
+                 +---------------------------------------+
+                 | [Mobile / React Native + Expo]        |
+                 | (Cache Local / SQLite / UI Nativa)    |
+                 +---------------------------------------+
+                          (Dispositivo Android)
+```
+
+---
+
+## 2. Arquitetura Monorepo
+
+Para garantir a coesão do ecossistema e evitar duplicação de regras de negócio ou tipagens, adotaremos a abordagem de **Monorepo** (utilizando ferramentas como Turborepo, Nx ou Yarn Workspaces).
+
+**Por que Monorepo?**
+- Permite o compartilhamento de tipos (TypeScript), funções utilitárias e validações (Zod) entre Web e Mobile.
+- Facilita a manutenção: uma alteração no schema do banco atualiza imediatamente as interfaces de ambas as plataformas.
+- Unifica o CI/CD.
+
+### Estrutura de Diretórios
+```text
+/
+├── apps/
+│   ├── web/               # Aplicação Next.js (React)
+│   └── mobile/            # Aplicativo React Native (Expo)
+├── packages/
+│   ├── ui/                # Componentes compartilhados (Design System / Shadcn adaptado)
+│   ├── types/             # Tipagens globais do TypeScript (Interfaces, DTOs)
+│   ├── utils/             # Funções utilitárias e formatadores
+│   └── validations/       # Schemas do Zod para validação universal
+├── docs/                  # PRD, Documentação de Arquitetura, ERD
+└── package.json
+```
+
+---
+
+## 3. Arquitetura do Frontend Web
+
+A aplicação Web será construída com foco em performance e SEO (onde aplicável), utilizando renderização híbrida.
+
+- **Framework:** Next.js utilizando o **App Router**.
+- **Padrão Arquitetural:** Feature-Based Architecture. O código é agrupado por domínios de negócio (ex: `/features/transactions`, `/features/accounts`) e não por tipo de arquivo.
+- **Gerenciamento de Estado/Dados:** TanStack Query para server-state (caching, deduplicação, otimistas updates) e Zustand/Context API para client-state global simples (ex: tema, estado da sidebar).
+- **Formulários e Validação:** React Hook Form integrado ao Zod para validação client-side robusta, sem re-renders desnecessários.
+- **Componentização e UI:** Shadcn/UI combinado com TailwindCSS. Componentes base (`/packages/ui`) puros, burros e altamente reutilizáveis.
+- **Comunicação:** `Supabase-js` encapsulado em Services/Hooks customizados.
+- **Lazy Loading:** Utilização massiva de `next/dynamic` e React Suspense para dividir o bundle (Code Splitting), carregando gráficos e modais pesados sob demanda.
+
+---
+
+## 4. Arquitetura Mobile
+
+O aplicativo Android focará na experiência fluida, responsividade nativa e suporte a cenários de baixa conectividade.
+
+- **Core:** React Native provido pelo Expo (Bare workflow/Custom Dev Client se necessário para pacotes nativos pesados).
+- **Navegação:** React Navigation (Stack, Tabs e Drawers).
+- **Offline & Storage:** Utilização de bibliotecas como MMKV (para chave/valor ultra rápido) ou WatermelonDB/Expo SQLite para persistência estruturada offline, garantindo que o app abra instantaneamente sem rede.
+- **Sincronização:** O app escutará mudanças locais e gerenciará uma fila de requisições offline (Offline-first approach), enviando-as ao Supabase assim que a conexão for reestabelecida.
+- **Atualizações:** Expo OTA (Over-the-Air) updates para correções de UI e regras de negócio sem necessidade de passar pela Play Store. Build do APK/AAB gerenciado pelo Expo EAS.
+
+---
+
+## 5. Backend (Supabase)
+
+Adotaremos o Supabase como BaaS, evitando a criação e manutenção de uma API REST tradicional em Node/Java. O frontend comunica-se diretamente com o banco, mas de forma segura.
+
+- **PostgreSQL:** O coração do sistema. Todas as relações e constraints ficam aqui.
+- **Edge Functions:** Funções serverless escritas em Deno/TypeScript, utilizadas APENAS para integrações sensíveis que não podem rodar no cliente (ex: Webhooks de pagamento bancário futuro, envio de e-mails em massa).
+- **Storage:** Buckets configurados para armazenamento de comprovantes (privado) e fotos de perfil (público).
+- **Realtime:** Broadcasters e Presence do Supabase habilitados em tabelas críticas (como `transactions` e `accounts`) para empurrar atualizações para os clientes Web e Mobile.
+- **Triggers e Functions (RPC):** Cálculos pesados (ex: recalcular saldos consolidados de 5 anos) ou atualizações em cascata ocorrerão via Triggers diretamente no banco para máxima performance.
+
+---
+
+## 6. Banco de Dados
+
+- **Estratégia:** Relacional, fortemente tipado, com alta normalização nas tabelas core para evitar anomalias de atualização, desnormalizando apenas em views materializadas para dashboards de alta performance.
+- **Relacionamentos:** Uso rigoroso de Foreign Keys (FK) e restrições de exclusão (ON DELETE CASCADE ou RESTRICT, dependendo da regra de negócio).
+- **Índices:** Índices B-Tree aplicados nas chaves estrangeiras (`user_id`, `account_id`) e em colunas de filtro frequente (`date`, `category_id`).
+- **Versionamento e Migrações:** Gerenciados via Supabase CLI (`supabase db diff` e `supabase db push`). O schema evolui de forma controlada através de arquivos SQL na pasta `supabase/migrations`.
+
+---
+
+## 7. Autenticação
+
+A identidade do usuário é central para a segurança do sistema multitenant.
+
+- **Mecanismo:** Supabase Auth emitindo JWTs (JSON Web Tokens).
+- **Provedores:** Login Nativo (E-mail/Senha) e OAuth (Google).
+- **Sessão:** 
+  - **Web:** Sessões mantidas via HttpOnly Cookies (preferencial para SSR no Next.js) ou local storage com atualização silenciosa de Refresh Token.
+  - **Mobile:** Sessão armazenada no SecureStorage/Keychain.
+- **Fluxos:** Recuperação de senha baseada em Deep Links e Magic Links.
+- **Evolução:** Arquitetura já preparada para adoção de 2FA (TOTP) utilizando a API nativa do Supabase Auth no futuro.
+
+---
+
+## 8. Sincronização
+
+A sincronização entre plataformas é o maior diferencial do sistema.
+
+- **Web:** TanStack Query gerencia o cache. Ao criar uma transação no celular, um evento Supabase Realtime notifica o Web. O TanStack Query invalida a query de `transactions` e refaz o fetch (ou aplica o payload diretamente no cache), atualizando a tela sem refresh.
+- **Android (Offline-First):**
+  - **Leitura:** O app lê primeiramente do cache local.
+  - **Escrita (Optimistic UI):** O usuário adiciona uma despesa. A UI reflete instantaneamente, o saldo é recalculado localmente.
+  - **Fila:** A mutação entra em uma fila de sincronização. Se online, envia para o Supabase. Se offline, aguarda.
+- **Conflitos:** A reconciliação adotará a estratégia *Last Write Wins* (A última gravação vence) baseada em `updated_at`, aliada à rastreabilidade de concorrência.
+- **Cache:** Configurações de Stale Time longas para dados imutáveis e curtas para fluxos financeiros dinâmicos.
+
+---
+
+## 9. Segurança
+
+- **Row Level Security (RLS):** É a barreira definitiva. Nenhuma query REST/GraphQL contorna o banco. Cada tabela terá políticas baseadas no JWT. Exemplo: `CREATE POLICY "Garantir posse" ON accounts FOR ALL USING (auth.uid() = user_id);`
+- **Rate Limit:** Limitadores de taxa no Supabase e na camada de borda (Vercel Edge) para prevenir abusos de endpoints.
+- **XSS & CSRF:** 
+  - O React anula a maior parte do XSS fazendo escaping automático.
+  - Políticas rigorosas de CORS.
+  - Formulários protegidos contra CSRF por design de JWT/Cookies no Next.js App Router.
+- **SQL Injection:** Totalmente mitigado pelas bibliotecas ORM/Query Builders (Supabase SDK), que utilizam prepared statements.
+- **Auditoria:** Tabelas sensíveis terão Triggers para salvar logs em uma tabela `audit_logs` separada (ex: alterações grandes em saldos iniciais).
+
+---
+
+## 10. Performance
+
+- **Web (Next.js):** 
+  - **SSR/CSR:** O Dashboard principal utilizará SSR para o carregamento inicial ultra-rápido, passando o estado hidratado para o CSR, que assume a responsividade com TanStack Query.
+  - **Paginação / Virtualização:** Listas de extratos com milhares de itens (ex: 5 anos de histórico) utilizarão paginação via cursor (Infinite Scroll) e virtualização de lista (ex: `@tanstack/react-virtual`) para manter o DOM leve e garantir 60fps na rolagem.
+  - **Memoização:** Uso consciente de `React.memo`, `useMemo` e `useCallback` estritamente em componentes de alta frequência de re-render (ex: gráficos e listas pesadas).
+
+---
+
+## 11. Escalabilidade
+
+- **Crescimento de Usuários:** A arquitetura Serverless (Next.js Edge + Vercel) suporta picos de tráfego instantâneos. O Supabase, baseado no PostgreSQL, utiliza Connection Poolers nativos (Supavisor) para aguentar dezenas de milhares de conexões simultâneas sem derrubar o banco de dados.
+- **Crescimento de Código:** A estrutura Monorepo e o padrão Feature-Based permitem que a equipe cresça e adicione módulos (ex: Seguros, Cripto, Consórcios) de forma isolada, sem tocar no código das Features existentes (Open-Closed Principle).
+
+---
+
+## 12. Convenções do Projeto
+
+- **Nomenclatura:** 
+  - Arquivos e pastas: `kebab-case` (ex: `transaction-list.tsx`).
+  - Componentes React: `PascalCase` (ex: `TransactionList`).
+  - Funções/Hooks/Variáveis: `camelCase` (ex: `useTransactions`).
+  - Banco de dados (Tabelas/Colunas): `snake_case` (ex: `account_balance`).
+- **Commits:** Conventional Commits (ex: `feat: add transaction form`, `fix: header layout on mobile`).
+- **Versionamento:** Git Flow simplificado. `main` (produção), `develop` (staging/integração) e branches por feature `feature/nome-da-feature`.
+- **Imports:** Utilização de Path Aliases absolutos (ex: `@/features/...`, `@repo/ui/...`).
+
+---
+
+## 13. Fluxo de Desenvolvimento
+
+A criação de qualquer nova funcionalidade (ex: Módulo de Empréstimos) deverá seguir rigorosamente o pipeline abaixo:
+
+1. **Planejamento:** Revisão do PRD, entendimento do fluxo de tela e regras de negócio.
+2. **Banco e Tipagens:** Criação da Migração SQL (Supabase) + Atualização do RLS. Geração e exportação dos novos Tipos/Interfaces TypeScript no pacote `@packages/types`.
+3. **Backend Lógico:** Criação de Edge Functions ou Triggers no PostgreSQL (se houver regras de negócio pesadas, ex: cálculo de juros compostos).
+4. **Camada de Dados (Hooks):** Criação dos hooks com TanStack Query (`useLoans.ts`) consumindo o SDK do Supabase.
+5. **Frontend (Web/Mobile):** Criação da UI isolada, integrando com os hooks criados.
+6. **Testes e Validações:** Testes unitários das funções complexas de cálculo e testes E2E básicos no fluxo feliz.
+7. **Documentação:** Atualização do `ROADMAP.md` e Changelog.
+8. **Code Review & Deploy:** Pull Request para `develop`, revisão de arquitetura e deploy automático pela Vercel/Expo.
+
+---
+
+## 14. Roadmap Técnico
+
+O desenvolvimento será segmentado em ciclos técnicos evolutivos para mitigar riscos precocemente.
+
+- **Fase 1: Infraestrutura e Fundações (Em Andamento)**
+  - Setup do Monorepo (Turborepo).
+  - Setup Next.js, React Native e Pacotes (UI, Types).
+  - Provisionamento de Banco e Configuração do Supabase (Auth, RLS default).
+  - CI/CD Pipelines Base.
+
+- **Fase 2: Identidade e Autenticação**
+  - Modelagem da Tabela de Profiles.
+  - Telas de Autenticação Web e Mobile.
+  - Proteção de Rotas (Middlewares Next.js e Auth Context no Mobile).
+
+- **Fase 3: Core Domain (Cadastros Base)**
+  - Tabelas de Accounts e Categories com RLS refinado.
+  - CRUD de Contas e Categorias (Web/Mobile).
+  - Validações globais com Zod.
+
+- **Fase 4: Motor Transacional e Sincronização**
+  - Tabela Transactions.
+  - Implementação do Caching e Optimistic Updates no TanStack Query.
+  - Setup do Supabase Realtime (WebSockets) para sincronização da tela de histórico.
+
+- **Fase 5: Inteligência e Dashboards**
+  - Triggers para consolidação de balanços mensais.
+  - Implementação de Recharts (Web) para gráficos.
+  - Componentes de Calendário e Relatórios.
+
+- **Fase 6: Complexidades de Domínio**
+  - Módulos paralelos: Objetivos Financeiros e Lançamentos em Cartão de Crédito (Parcelamentos lógicos).
+
+- **Fase 7: Polimento Mobile e Offline**
+  - Implementação pesada do SQLite/WatermelonDB.
+  - Fila de sincronização (Sync Queue) em Background.
+  - Push Notifications para vencimentos (FCM/Expo Notifications).
+
+- **Fase 8: Produção e Escalabilidade**
+  - Load Testing, refinamento de Índices SQL.
+  - Exportação de Dados e Funcionalidades LGPD.
+  - Lançamento Oficial (Vercel Prod / Play Store).
+
+
+=== BACKLOG.md ===
+# Backlog do Produto - Conta Comigo
+
+## 1. Visão Geral
+Este documento traduz toda a visão do produto (PRD, Arquitetura, Banco de Dados, API e Design) em itens acionáveis de trabalho. O Backlog é um artefato vivo, priorizado com base na entrega de valor contínuo e estruturado utilizando metodologias ágeis (Scrum/Kanban).
+
+**Critérios de Priorização (MoSCoW):**
+*   **Must Have (Obrigatório):** Itens essenciais para o MVP (Minimum Viable Product). Sem eles, o produto não funciona.
+*   **Should Have (Importante):** Itens de alto valor, mas que possuem *workarounds* temporários.
+*   **Could Have (Desejável):** Melhorias que aumentam o engajamento e a qualidade da experiência (Nice to have).
+*   **Won't Have (Não nesta versão):** Ideias valiosas, mas postergadas para versões futuras (V2).
+
+---
+
+## 2. Épicos e Features
+
+Abaixo está o detalhamento dos Épicos do sistema.
+
+### Épico 1: Autenticação e Segurança
+*   **Feature 1.1:** Login / Cadastro via E-mail e Senha.
+*   **Feature 1.2:** Login Social (Google).
+*   **Feature 1.3:** Recuperação de Senha.
+
+### Épico 2: Estrutura Base (Contas e Categorias)
+*   **Feature 2.1:** Gestão de Contas Bancárias.
+*   **Feature 2.2:** Gestão de Categorias (Receitas/Despesas).
+
+### Épico 3: Motor Financeiro (Transações)
+*   **Feature 3.1:** Lançamento de Despesas e Receitas Simples.
+*   **Feature 3.2:** Lançamentos Recorrentes e Parcelados.
+*   **Feature 3.3:** Transferências entre Contas.
+
+### Épico 4: Cartões de Crédito
+*   **Feature 4.1:** Cadastro e Gestão de Cartões.
+*   **Feature 4.2:** Faturas e Pagamento de Faturas.
+
+### Épico 5: Dashboard e Relatórios
+*   **Feature 5.1:** Dashboard Consolidado (Saldos e Gráfico Base).
+*   **Feature 5.2:** Relatórios Mensais e Exportação (PDF/CSV).
+
+### Épico 6: Inteligência e Planejamento
+*   **Feature 6.1:** Objetivos Financeiros (Metas).
+*   **Feature 6.2:** Orçamentos por Categoria.
+
+### Épico 7: Investimentos
+*   **Feature 7.1:** Carteira de Ativos.
+*   **Feature 7.2:** Proventos e Rentabilidade.
+
+### Épico 8: Configurações e Perfil
+*   **Feature 8.1:** Customização de Perfil (Tema, Moeda).
+*   **Feature 8.2:** LGPD e Deleção de Dados.
+
+---
+
+## 3. Histórias de Usuário, Critérios de Aceite e Estimativas
+
+Abaixo está a decomposição das principais Features em Histórias de Usuário (US). 
+*As estimativas (Pontos) utilizam a sequência de Fibonacci (1, 2, 3, 5, 8, 13).*
+
+### Épico 1: Autenticação
+**US-01: Cadastro via E-mail**
+*   *Como* usuário recém-chegado
+*   *Quero* me cadastrar utilizando meu e-mail e uma senha forte
+*   *Para* criar meu espaço seguro de gestão financeira.
+*   **Critérios de Aceite:** Validar e-mail, senha mínima de 8 caracteres; Enviar e-mail de confirmação (Supabase Auth); Criar registro na tabela `profiles` via Trigger.
+*   **Prioridade:** Must Have
+*   **Estimativa:** 5 Pontos
+
+**US-02: Login Social (Google)**
+*   *Como* usuário frequente
+*   *Quero* fazer login com apenas um clique via Google
+*   *Para* acessar minha conta rapidamente sem lembrar senhas.
+*   **Critérios de Aceite:** Integração OAuth Google configurada no Supabase; Redirecionamento correto após sucesso.
+*   **Prioridade:** Should Have
+*   **Estimativa:** 3 Pontos
+
+### Épico 2: Estrutura Base
+**US-03: Cadastro de Conta Bancária**
+*   *Como* usuário do sistema
+*   *Quero* cadastrar minhas contas bancárias informando o saldo inicial
+*   *Para* refletir fielmente meu dinheiro em diferentes instituições.
+*   **Critérios de Aceite:** Campos obrigatórios: Nome, Tipo, Saldo; Bloquear cadastro duplicado com mesmo nome; Gravar no Supabase (RLS protegido).
+*   **Prioridade:** Must Have
+*   **Estimativa:** 5 Pontos
+
+### Épico 3: Motor Financeiro
+**US-04: Adicionar Despesa Simples**
+*   *Como* usuário do sistema
+*   *Quero* registrar um gasto (Despesa)
+*   *Para* que o valor seja abatido do meu saldo atual.
+*   **Critérios de Aceite:** Input de valor "tipo calculadora"; Selecionar conta e categoria; Deduzir imediatamente do saldo no cache local (Optimistic Update).
+*   **Dependência:** Requer US-03 (Contas) concluída.
+*   **Prioridade:** Must Have
+*   **Estimativa:** 8 Pontos
+
+**US-05: Adicionar Compra Parcelada**
+*   *Como* usuário do sistema
+*   *Quero* registrar uma compra no cartão dividida em várias vezes
+*   *Para* que o sistema projete automaticamente as faturas dos próximos meses.
+*   **Critérios de Aceite:** Informar número de parcelas; Gerar registros atrelados à `transaction_installments`; Distribuição do valor entre os meses seguintes.
+*   **Prioridade:** Should Have
+*   **Estimativa:** 13 Pontos (Alta Complexidade)
+
+### Épico 5: Dashboard e Relatórios
+**US-06: Visão Geral de Saldos**
+*   *Como* usuário do sistema
+*   *Quero* ver meu saldo total e saldo de investimentos na tela principal
+*   *Para* ter ciência imediata da minha capacidade financeira diária.
+*   **Critérios de Aceite:** Soma correta de todas as contas do tipo CHECKING/CASH; Atualização em tempo real via Supabase Subscriptions.
+*   **Prioridade:** Must Have
+*   **Estimativa:** 5 Pontos
+
+---
+
+
+
+=== DATABASE.md ===
+# Documentação de Arquitetura de Banco de Dados - Conta Comigo
+
+## 1. Filosofia do Banco
+
+A modelagem do banco de dados do **Conta Comigo** foi desenhada para suportar uma aplicação financeira crítica, garantindo consistência absoluta dos dados, performance em escala e sincronização offline-first. As premissas filosóficas são:
+
+*   **Normalização (3NF):** O núcleo transacional é estritamente normalizado para garantir integridade e evitar anomalias de atualização. Dados analíticos (dashboards) podem usar desnormalização através de Materialized Views no futuro.
+*   **Performance:** Consultas rápidas são garantidas pelo uso estratégico de índices (B-Tree em FKs e datas) e particionamento projetado para o longo prazo.
+*   **Escalabilidade:** O banco é preparado para crescer de um único usuário para um modelo SaaS multi-tenant massivo, utilizando `user_id` em quase todas as tabelas para facilitar futuro sharding ou particionamento.
+*   **Segurança (Zero Trust):** Acesso direto aos dados é bloqueado por padrão. Row Level Security (RLS) é a lei. Cada query obrigatoriamente valida a identidade via JWT.
+*   **Auditoria:** Toda ação destrutiva ou mutação sensível é rastreada de forma imutável.
+*   **Soft Delete:** Registros financeiros nunca são fisicamente deletados para preservar o histórico. Ocultamos logicamente via `deleted_at`.
+*   **Versionamento (Sincronização):** Controle rigoroso de concorrência com timestamps (`updated_at`) para suportar a arquitetura offline-first e conciliação de conflitos.
+
+---
+
+## 2. Diagrama ER (Lógico e Textual)
+
+```text
+auth.users (Supabase Auth)
+ ├── profiles
+ │    ├── settings
+ │    └── currencies (Preferência do usuário)
+ │
+ ├── accounts (Contas Bancárias)
+ │    ├── account_types
+ │    ├── transactions (Receitas/Despesas Base)
+ │    │    ├── attachments
+ │    │    └── audit_logs
+ │    └── transfers (Envolve 2 accounts)
+ │
+ ├── categories (Categorias Customizadas)
+ │
+ ├── credit_cards
+ │    └── credit_card_invoices (Faturas)
+ │         └── invoice_payments
+ │
+ ├── transations_logic (Motores de Repetição)
+ │    ├── transaction_recurrences (Assinaturas/Fixas)
+ │    └── transaction_installments (Parcelamentos)
+ │
+ ├── investments (Carteiras)
+ │    ├── investment_assets (Ativos)
+ │    ├── investment_movements (Compra/Venda)
+ │    └── dividends (Proventos)
+ │
+ ├── goals (Objetivos Financeiros)
+ │    └── goal_transactions (Aportes/Resgates)
+ │
+ ├── budgets (Orçamentos Mensais)
+ │
+ ├── loans (Empréstimos)
+ │    └── loan_installments (Amortizações)
+ │
+ ├── subscriptions (Gestão Visual de Assinaturas)
+ │
+ └── notifications (Push e Lembretes)
+```
+
+---
+
+## 3. Entidades
+
+Abaixo detalhamos a estrutura lógica de todas as entidades do sistema.
+
+### 3.1. Núcleo de Usuários
+*   **users:** Tabela gerenciada pelo Supabase Auth (`auth.users`). Armazena credenciais, e-mail e hash de senhas.
+*   **profiles:** Extensão pública do usuário. Responsabilidade: Dados demográficos. Obrigatórios: `id` (FK auth.users), `first_name`. Opcionais: `last_name`, `avatar_url`.
+*   **settings:** Preferências do app. Obrigatórios: `user_id`, `theme`, `language`, `timezone`.
+*   **currencies:** Dicionário de moedas disponíveis para conversão.
+
+### 3.2. Contas e Categorias
+*   **accounts:** Contas físicas/digitais. Responsabilidade: Saldo direto. Obrigatórios: `id`, `user_id`, `name`, `type_id`, `initial_balance`. Opcionais: `color`, `icon`, `bank_name`. Calculados: `current_balance`.
+*   **account_types:** Tipos de conta (Corrente, Poupança, Carteira). Domínio estático.
+*   **categories:** Categorias de classificação financeira. Obrigatórios: `id`, `user_id`, `name`, `type` (INCOME/EXPENSE). Opcionais: `color`, `icon`, `parent_category_id`.
+
+### 3.3. Transações e Cartões
+*   **transactions:** Coração do sistema. Lançamentos pontuais. Obrigatórios: `id`, `user_id`, `account_id` (ou `credit_card_id`), `category_id`, `type`, `amount`, `date`, `status` (PAID/UNPAID). Opcionais: `description`, `tags`, `recurrence_id`, `installment_id`.
+*   **transaction_installments:** Agrupador de compras parceladas. Contém o valor total e o número de parcelas. As parcelas individuais vão para `transactions`.
+*   **transaction_recurrences:** Agrupador de lançamentos fixos (mensais/anuais). Usado para projetar transações futuras.
+*   **transfers:** Entidade relacional para transferências. Obrigatórios: `id`, `user_id`, `origin_transaction_id` (saída), `destination_transaction_id` (entrada).
+*   **credit_cards:** Cartões do usuário. Obrigatórios: `id`, `user_id`, `name`, `limit`, `closing_day`, `due_day`. Opcionais: `brand`, `color`.
+*   **credit_card_invoices:** Faturas geradas. Obrigatórios: `id`, `credit_card_id`, `month`, `year`. Calculados: `total_amount`.
+*   **invoice_payments:** Pagamentos de faturas. Relaciona uma `credit_card_invoice` a uma `transaction` (saída da conta corrente).
+
+### 3.4. Planejamento Financeiro
+*   **budgets:** Orçamentos definidos pelo usuário. Obrigatórios: `id`, `user_id`, `category_id`, `month`, `year`, `limit_amount`. Calculados: `spent_amount`.
+*   **goals:** Objetivos (ex: Viagem). Obrigatórios: `id`, `user_id`, `name`, `target_amount`, `target_date`.
+*   **goal_transactions:** Aportes para os objetivos. Obrigatórios: `id`, `goal_id`, `amount`, `date`, `transaction_id` (se debitou de uma conta).
+*   **subscriptions:** Espelho visual de `transaction_recurrences` focado em assinaturas (Netflix, Academia), adicionando metadata como site e plano.
+
+### 3.5. Investimentos e Empréstimos
+*   **investments:** Carteiras/Corretoras. Obrigatórios: `id`, `user_id`, `name`.
+*   **investment_assets:** Ativos individuais (PETR4, Tesouro Direto). Obrigatórios: `id`, `user_id`, `investment_id`, `ticker_or_name`, `asset_type`.
+*   **investment_movements:** Compras e vendas. Obrigatórios: `id`, `asset_id`, `type` (BUY/SELL), `quantity`, `unit_price`, `date`.
+*   **dividends:** Proventos recebidos. Obrigatórios: `id`, `asset_id`, `amount`, `date`.
+*   **loans:** Empréstimos tomados ou concedidos. Obrigatórios: `id`, `user_id`, `name`, `principal_amount`, `interest_rate`.
+*   **loan_installments:** Amortizações do empréstimo.
+
+### 3.6. Sistema
+*   **notifications:** Alertas para o usuário. Obrigatórios: `id`, `user_id`, `title`, `body`, `read_status`.
+*   **attachments:** Comprovantes em PDF/Imagens. Obrigatórios: `id`, `user_id`, `transaction_id`, `storage_path`, `file_type`.
+*   **audit_logs:** Rastreio de ações. Obrigatórios: `id`, `user_id`, `action` (CREATE/UPDATE/DELETE), `table_name`, `record_id`, `old_data` (JSONB), `new_data` (JSONB).
+
+---
+
+## 4. Relacionamentos
+
+*   **1:1 (Um-para-Um):** `auth.users` <-> `profiles`. `profiles` <-> `settings`. Um usuário tem exatamente um perfil e uma configuração.
+*   **1:N (Um-para-Muitos):** `users` -> `accounts` (Um usuário possui várias contas). `accounts` -> `transactions`. `credit_cards` -> `transactions`.
+*   **N:N (Muitos-para-Muitos):** A ser implementado futuramente para *Tags* (`transactions_tags`), permitindo que uma transação tenha múltiplas tags, e uma tag pertença a várias transações.
+*   **Cascade:** Quando um `user` é deletado (hard delete), o Cascade deleta todo o banco daquele usuário para cumprir a LGPD.
+*   **Restrict:** Proibido deletar uma `account` ou `category` se existirem `transactions` vinculadas a ela. O usuário deve primeiro remanejar as transações ou usar inativação (Soft Delete).
+
+---
+
+## 5. Índices
+
+A alta performance será garantida pela criação cirúrgica de índices:
+*   **Índices B-Tree (Chaves Estrangeiras):** Todos os `user_id` e IDs de relacionamento (`account_id`, `category_id`) terão índices para garantir Joins ultra-rápidos e acelerar o RLS.
+*   **Índices de Data (BRIN ou B-Tree):** A coluna `date` em `transactions` receberá índice para viabilizar agrupamentos rápidos por mês (Dashboard).
+*   **Índices Compostos:** Índices como `(user_id, date)` ou `(credit_card_id, status)` para otimizar as queries exatas dos relatórios do aplicativo e telas de faturas.
+
+---
+
+## 6. Integridade
+
+*   **Foreign Keys (FKs):** Fortemente amarradas para garantir que não existam registros órfãos.
+*   **Unique Constraints:** Imposição de regras únicas lógicas. Exemplo: `(user_id, category_name)` garante que o usuário não cadastre duas categorias com o exato mesmo nome.
+*   **Checks:** Constraints a nível de banco. Exemplo: `CHECK (amount > 0)` em transações. `CHECK (type IN ('INCOME', 'EXPENSE'))`.
+*   **Triggers de Manutenção:** Triggers de atualização automática de `updated_at`.
+
+---
+
+## 7. Histórico e Retenção
+
+*   **Soft Delete:** O uso da coluna `deleted_at` anula a exibição dos registros em queries regulares (todas as views e queries do app usarão `where deleted_at is null`).
+*   **Audit Logs:** Implementados via PostgreSQL Triggers (usando `JSONB` para capturar o "antes" e "depois" do registro) para tabelas financeiras core (Accounts e Transactions).
+*   **Versionamento:** O uso da coluna `version` (int incrementado a cada update) ou `updated_at` (timestamp precisão milissegundos) garante controle de concorrência.
+
+---
+
+## 8. Segurança
+
+*   **RLS (Row Level Security):** O Supabase não retornará dados sem autenticação.
+*   **Policies:** Todas as tabelas têm a seguinte policy primária: `(auth.uid() = user_id)`. Para tabelas derivadas, usa-se subqueries de verificação ou FKs diretas.
+*   **Permissões:** O banco não expõe permissões `DELETE` físicas para o client side (RPC ou APIs limitadas cuidarão do Soft Delete via `UPDATE`).
+*   **Isolamento:** A quebra de isolamento multitenant é impossível a nível estrutural no PostgreSQL caso o RLS seja aplicado corretamente.
+
+---
+
+## 9. Estratégia de IDs
+
+**Escolha: UUIDv4**
+*   **Motivo Principal:** Suporte à **Sincronização Offline**. O aplicativo Android (React Native) precisa criar e gravar transações localmente no SQLite enquanto o usuário está em modo avião (sem rede). Com UUIDv4, o celular gera o ID final imediatamente, exibe na UI e manda para o Supabase depois, garantindo 0% de chance de colisão de ID no banco central. (IDs Sequenciais/Integer impossibilitam isso sem conciliação complexa).
+
+---
+
+## 10. Estratégia de Datas
+
+*   **Timestamps:** O formato oficial é `TIMESTAMPTZ` (Timestamp with Time Zone), armazenado em UTC no banco. O cliente (Next.js/React Native) formata para o fuso horário local.
+*   **`created_at`:** Imutável, default `now()`.
+*   **`updated_at`:** Atualizado por trigger sempre que a linha for modificada. Essencial para reconciliação.
+*   **`deleted_at`:** Preenchido para inativação (Soft Delete).
+*   **`last_sync`:** (Aplicável primariamente no Client SQLite) Define quando o dado local foi confirmado pelo servidor.
+
+---
+
+## 11. Estratégia Financeira
+
+*   **Transferências:** Uma tela de transferência cria 1 registro na tabela `transfers` e 2 registros na tabela `transactions` (uma despesa na conta origem, uma receita na conta destino).
+*   **Cartões e Faturas:** Despesas feitas no crédito recebem `account_id = null` e `credit_card_id = UUID`. Uma Trigger ou Edge Function soma essas despesas em `credit_card_invoices`.
+*   **Pagamento de Fatura:** Gera uma transação de despesa na Conta Corrente, que é ligada à entidade `invoice_payments` para abater a dívida.
+*   **Parcelamentos:** Uma compra parcelada gera o registro pai `transaction_installments` (Ex: R$ 1.200) e o frontend/backend gera imediatamente N (ex: 12) transações filhas de R$ 100 com datas futuras atreladas.
+*   **Recorrências:** Semelhante aos parcelamentos, mas gera transações progressivamente através de Cron Jobs (Edge Functions) conforme a data de expiração se aproxima.
+
+---
+
+## 12. Sincronização e Conectividade
+
+*   **Realtime:** O Supabase enviará payloads WebSocket para os clientes toda vez que houver `INSERT/UPDATE/DELETE` nas tabelas que o usuário assina.
+*   **Offline-First & Conflitos:** O mobile utiliza banco local (ex: WatermelonDB) com uma coluna `updated_at`.
+*   **Reconciliação Incremental (Last Write Wins):** Se houver conflito (duas edições no mesmo registro offline), o banco acatará o `updated_at` mais recente cronologicamente.
+
+---
+
+## 13. Escalabilidade
+
+*   **Até 100 usuários:** Banco padrão compartilhado (Tier Free do Supabase).
+*   **Até 10 mil usuários:** Migração para instâncias dedicadas. Criação de índices otimizados pós-análise de lentidão em `pg_stat_statements`.
+*   **Até 100 mil usuários:** Habilitação do **Supavisor** (Connection Poolinger nativo do Supabase) para suportar milhares de requisições de API simultâneas. Habilitação de Read Replicas se os relatórios (OLAP) pesarem na base transacional (OLTP).
+*   **Até 1 milhão de usuários:** Particionamento nativo do PostgreSQL nas tabelas `transactions` e `audit_logs` (Partição por Range de `date` ou Hash de `user_id`).
+
+---
+
+## 14. Roadmap do Banco
+
+**Fase 1: Identidade e Infraestrutura (Fundação)**
+*   Schema Auth, Profiles, Configurações, Segurança RLS base.
+**Fase 2: Core Bancário (MVP Financeiro)**
+*   Accounts, Account Types, Categories, Transactions (Simples), Transfers.
+**Fase 3: Expansão de Crédito (Endividamento)**
+*   Credit Cards, Invoices, Parcelamentos (Installments).
+**Fase 4: Inteligência Artificial e Previsibilidade**
+*   Budgets, Goals, Subscriptions (Recorrência via Cron).
+**Fase 5: Patrimônio (Ecossistema Fechado)**
+*   Investments, Dividends, Loans.
+**Fase 6: Prontidão Corporativa (Enterprise Grade)**
+*   Audit Logs em JSONB, View Materializadas, Particionamento de Histórico.
+
+
+=== DESIGN_SYSTEM.md ===
+# Documentação do Design System - Conta Comigo
+
+## 1. Filosofia Visual
+
+O Design System do **Conta Comigo** baseia-se na premissa de que a gestão financeira deve ser uma experiência pacífica, clara e sob controle. Nossos princípios são:
+
+*   **Alta Relação Sinal-Ruído:** Remoção de qualquer elemento decorativo que não transmita informação. Interfaces limpas com muito espaço em branco (ou espaço negativo no Dark Mode).
+*   **Foco no Conteúdo:** Os números e os gráficos são os protagonistas. A interface é apenas o palco.
+*   **Minimalismo Utilitário:** Semelhante à abordagem da Linear e Vercel, utilizamos bordas finas (hairlines), contrastes sutis de fundo e tipografia rigorosamente alinhada.
+*   **Elegância Tecnológica:** Transmitimos segurança institucional de um banco tradicional, com a velocidade e estética de uma FinTech moderna.
+
+---
+
+## 2. Identidade e Percepção
+
+O usuário deve se sentir **no controle, calmo e focado**. O sistema financeiro muitas vezes gera ansiedade; portanto, a interface não deve "gritar".
+*   As cores de alerta e erro são usadas com parcimônia.
+*   O sucesso é celebrado de forma sutil, sem animações exageradas ou confetes.
+*   A paleta predominantemente neutra e monocromática cria uma sensação de estabilidade e confiança.
+
+---
+
+## 3. Paleta de Cores (Tokens Visuals)
+
+A paleta é construída em torno de uma escala de cinzas (Zinc/Neutral) sofisticada e cores semânticas vibrantes, mas controladas.
+
+### Cores Base
+*   **Primária (Brand):** Indigo/Violeta. Transmite inovação e tecnologia.
+*   **Secundária:** Escala de cinzas (Zinc). Usada para o esqueleto da interface.
+
+### Semântica
+*   **Sucesso (Success):** Emerald (Verde). Usado para rendimentos, receitas e indicadores positivos.
+*   **Erro/Destrutivo (Danger):** Rose (Vermelho). Usado para exclusões, despesas altas (quando alertadas) e erros.
+*   **Alerta (Warning):** Amber (Amarelo/Laranja). Usado para orçamentos próximos do limite.
+*   **Informação (Info):** Sky (Azul Claro). Usado para tooltips e onboarding.
+
+### Aplicação (Dark Mode "Sophisticated Dark" & Light Mode)
+*   **Background (Fundo):**
+    *   Dark: `#09090b` (Preto profundo)
+    *   Light: `#ffffff` (Branco puro)
+*   **Surface (Superfícies/Cards):**
+    *   Dark: `#0f0f11` (Elevado 1 nível) até `#18181b` (Elevado 2 níveis)
+    *   Light: `#fafafa` (Elevado 1 nível)
+*   **Borders (Bordas):** Utilização de `zinc-800` (Dark) e `zinc-200` (Light). Sempre opacidade sólida de 1px.
+*   **Text (Texto):**
+    *   High Contrast: `zinc-100` (Dark) / `zinc-900` (Light) para Títulos.
+    *   Medium Contrast: `zinc-400` (Dark) / `zinc-500` (Light) para parágrafos e subtítulos.
+    *   Disabled: `zinc-600` (Dark) / `zinc-300` (Light).
+
+---
+
+## 4. Tipografia
+
+Utilizaremos a fonte do sistema combinada com uma fonte geométrica sem serifa (ex: *Inter*, *SF Pro* ou *Geist*).
+
+*   **Família Primária:** Sans-serif moderna e legível em tamanhos pequenos (focada em dados numéricos perfeitamente alinhados).
+*   **Escalas:**
+    *   H1: 24px (Mobile) / 32px (Desktop)
+    *   H2: 20px (Mobile) / 24px (Desktop)
+    *   Body Base: 16px (Leitura perfeita).
+    *   Small / Caption: 12px (Metadados de transação).
+    *   Micro / Overline: 10px (Labels de gráficos, UPPERCASE tracking largo).
+*   **Hierarquia:** Construída variando peso (Medium/Semibold) e cor (High/Medium contrast), e não apenas tamanho.
+*   **Tabular Numbers:** Obrigatório o uso de `font-variant-numeric: tabular-nums` para que valores financeiros fiquem perfeitamente alinhados verticalmente nas tabelas.
+
+---
+
+## 5. Grid
+
+O layout utiliza grids fluídos limitados a contêineres máximos para não perder a proporção em monitores ultra-wide.
+
+*   **Desktop (xl/2xl):** 12 colunas. Container máximo de 1280px ou 1440px. Margens generosas.
+*   **Tablet (md/lg):** 8 colunas. Adaptação de sidebars para estado "colapsado" (apenas ícones).
+*   **Mobile (sm):** 4 colunas. Container ocupa 100% da largura, margens laterais de 16px.
+
+---
+
+## 6. Espaçamentos (Spacing System)
+
+Baseado em um **sistema de 4pt** para garantir ritmo vertical perfeito.
+
+*   Micro: 2px, 4px (Gap de ícones e textos adjacentes)
+*   Pequeno: 8px, 12px (Padding interno de botões e inputs)
+*   Médio: 16px, 24px (Padding de cards, gap de listas)
+*   Grande: 32px, 48px (Espaço entre seções do dashboard)
+*   Enorme: 64px+ (Espaçamento estrutural de páginas)
+
+---
+
+## 7. Bordas e Sombras
+
+Inspirado no Apple e Stripe, os cantos são arredondados matematicamente e as sombras simulam iluminação física.
+
+*   **Radius:**
+    *   `sm` (4px): Inputs, Checkboxes, Badges pequenas.
+    *   `md` (8px): Botões padrão, Menus Dropdown.
+    *   `xl` (16px - 24px): Cards principais do Dashboard, Modais e Bottom Sheets.
+*   **Sombras (Elevations):**
+    *   Dark Mode: Sombras quase imperceptíveis. A separação é feita via bordas finas (`border-zinc-800`).
+    *   Light Mode: Sombras suaves e difusas com deslocamento vertical longo (ex: `0 4px 20px rgba(0,0,0,0.05)`).
+    *   Glow (Efeito Vercel): Uso esporádico de sombras coloridas para botões primários (ex: glow indigo suave).
+
+---
+
+## 8. Ícones
+
+*   **Biblioteca:** Lucide Icons (traços geométricos, consistentes e modernos).
+*   **Estilo:** Outline (contorno). Stroke (espessura) de 1.5px ou 2px (dependendo do peso visual da fonte adjacente).
+*   **Tamanhos:**
+    *   16px: Dentro de botões, inputs e metadados.
+    *   20px / 24px: Menus de navegação e ações de barra de topo.
+    *   32px+: Ícones ilustrativos para Empty States.
+
+---
+
+## 9. Componentes
+
+### Elementos Básicos
+*   **Botões:** Sem bordas pesadas. Botão Primário usa a cor da marca com leve hover de brilho. Botão Secundário usa fundo de superfície com borda sutil. Destrutivos apenas para confirmação final.
+*   **Inputs:** Fundo levemente contrastante com a superfície. Sem borda forte até o estado `:focus`, onde recebe um anel (ring) suave na cor primária.
+*   **Badges/Pills:** Extremamente arredondadas (full-rounded). Textos pequenos, usadas para status ("Pago", "Pendente").
+
+### Dados e Estrutura
+*   **Cards:** Elemento central. Bordas de 1px (hairline), fundo opaco. Separam visualmente diferentes clusters de informação.
+*   **Tables:** Sem bordas verticais, apenas linhas horizontais divisórias ultra-finas. Hover na linha inteira.
+*   **Charts:** Uso de Recharts minimalista. Eixos e linhas de grade quase transparentes. Foco total na linha/barra principal. Efeitos de gradiente no preenchimento (ex: linha sólida com fundo esvanecendo para transparente).
+
+### Navegação e Sobreposições
+*   **Sidebar / Navbar:** Comportamento fixo. Na Web, Sidebar à esquerda. No Mobile, Top Navbar simples.
+*   **Dialogs (Modais):** Fundo desfocado (backdrop blur). O modal deve surgir do centro com leve scale-up (95% para 100%).
+*   **Bottom Sheets:** Exclusivos para Mobile. Deslizam de baixo para cima, acompanhando a física do dedo do usuário.
+*   **Dropdowns / Popovers:** Menus contextuais acoplados a botões de reticências (...). Bordas arredondadas e sombras nítidas.
+
+### Feedback e Estados
+*   **Toast / Snackbars:** Notificações flutuantes temporárias que surgem no canto inferior direito (Desktop) ou topo (Mobile).
+*   **Skeleton:** Estado de loading. Animação de "shimmer" (brilho passando) sobre blocos cinzas, mapeando o layout final antes dos dados chegarem. Sem spinners rotativos para carregamento de páginas inteiras.
+*   **Empty States:** Centrados. Ilustração minimalista + Título curto + Texto de apoio + Botão Call to Action primário.
+*   **Error States:** Contidos. Não "quebram" a tela. Exibem mensagem amigável com opção de "Tentar Novamente".
+
+---
+
+## 10. Dashboard
+
+O coração do aplicativo. O layout obedece à hierarquia de escaneabilidade em "Z" e "F".
+
+*   **Topo (KPIs):** Linha de 4 cards (Desktop) ou Grid 2x2 (Mobile). Mostram os macro-números (Saldo Total, Despesas do Mês).
+*   **Meio (Gráficos):** Maior área de tela. Gráfico principal de Fluxo de Caixa ou Patrimônio.
+*   **Base/Lateral (Listas):** Atividades Recentes ou Transações Pendentes.
+*   **Filtros:** Dropdowns minimalistas no topo do Dashboard, afetando todos os widgets contextualmente (ex: Seletor de Mês/Ano).
+
+---
+
+## 11. Mobile (Adaptações)
+
+O aplicativo React Native não será uma cópia "esmagada" da Web, possuirá UX nativa.
+
+*   **Bottom Navigation:** Substitui a Sidebar. Abas para (Dashboard, Extrato, Adicionar, Metas, Perfil).
+*   **Gestos (Swipes):** Deslizar uma transação para a esquerda revela opções de "Excluir" ou "Editar" (Swipe Actions).
+*   **Safe Areas:** Respeito absoluto ao Notch/Dynamic Island do iPhone e barras de navegação do Android, utilizando paddings dinâmicos.
+*   **FAB (Floating Action Button):** Botão centralizado na Bottom Navigation, em destaque, focado em "Nova Transação".
+
+---
+
+## 12. Acessibilidade
+
+*   **Contraste (WCAG 2.1 AA):** Garantia de contraste mínimo de 4.5:1 para textos em relação aos fundos. Textos de placeholder terão contraste de 3:1 mínimo.
+*   **Navegação por Teclado:** Total suporte ao `Tab`. Elementos focados recebem um `ring` visível de 2px, sem distorcer o layout (`outline: none`, uso de box-shadow/ring).
+*   **Screen Readers:** Uso extensivo de atributos `aria-label` para botões com apenas ícones, e `aria-hidden` para elementos decorativos. Suporte a redução de movimento.
+
+---
+
+## 13. Motion Design
+
+As animações comunicam estado e física, não apenas enfeite.
+
+*   **Duração:** Rápida. Entre 150ms a 300ms. Interfaces financeiras lentas causam frustração.
+*   **Transições/Easing:** Curvas Bezier (ex: `ease-out` para entrada de modais, `ease-in` para saídas, `spring` para bounce em interações de clique).
+*   **Microinterações:** Botões reduzem ligeiramente o tamanho (scale 0.98) no clique. Troca de abas desliza um sublinhado (Magic Layout do Framer Motion).
+*   **Transição de Páginas:** Cross-fade ultra rápido (100ms) no Next.js (Web) e animação de Slide nativa no React Navigation (Mobile).
+
+---
+
+## 14. UX (Regras de Experiência)
+
+*   **Formulários:** Validação inline imediata no evento `onBlur`. Labels devem estar sempre visíveis (nunca usar apenas placeholders). Explicar ao usuário o formato esperado (ex: R$ 0,00).
+*   **Destrutividade:** Ações como "Excluir Conta" ou "Excluir Lançamento Parcelado" DEVEM invocar um modal de confirmação. Ações perigosas possuem botões em cor Rose.
+*   **Erros:** "Falha ao carregar transações". Ações devem ser resolvíveis, com botões de "Tentar de Novo", em vez de páginas em branco quebradas.
+*   **Fluxo Feliz:** O caminho para adicionar uma transação comum não pode levar mais do que 3 toques/cliques a partir do Dashboard.
+
+---
+
+## 15. Roadmap do Design System
+
+*   **V1 (Fundações):** Tokens de cor, tipografia, grid, e os 4 componentes base (Botões, Inputs, Cards, Tipografia). Suporte nativo ao Dark/Light.
+*   **V2 (Formulários e Tabelas):** Construção robusta de Dropdowns, DataPickers customizados, Selects e Tabelas financeiras escaneáveis.
+*   **V3 (Padrões Mobile e Layout):** Bottom Sheets, Swipe Actions e Bottom Navigation consolidada.
+*   **V4 (Polimento e Motion):** Microinterações com Framer Motion (Web) e Reanimated (Mobile). Skeletons avançados e transições de página complexas.
+
+
+=== IMPLEMENTATION_GUIDE.md ===
+# Guia de Implementação (Implementation Guide) - Conta Comigo
+
+Este documento é a referência oficial para qualquer desenvolvedor, engenheiro ou agente de IA que atue no projeto **Conta Comigo**. Ele define as diretrizes arquiteturais, o processo de desenvolvimento e os rigorosos padrões de qualidade que mantêm o ecossistema escalável e coeso.
+
+---
+
+## 1. Fluxo Oficial de Desenvolvimento
+
+A implementação de qualquer nova funcionalidade (Feature) deve seguir **obrigatoriamente** o ciclo abaixo. Não pule etapas.
+
+1. **Ler a documentação:** Revise o `PRD.md`, `WIREFRAMES.md` e `BACKLOG.md` para entender o escopo exato da funcionalidade e seu valor para o usuário.
+2. **Analisar dependências:** Verifique no `ARCHITECTURE.md` e `API.md` quais módulos serão impactados (ex: criar uma despesa afeta o Saldo da Conta e o Orçamento).
+3. **Atualizar o banco (quando necessário):** Modele novas tabelas, ajuste relacionamentos, crie índices e, o mais importante, defina as políticas de Row Level Security (RLS) associadas.
+4. **Atualizar APIs (Supabase):** Crie as *Edge Functions* ou *Triggers* caso a lógica precise rodar no servidor. Configure os *Buckets* (Storage) se envolver upload de arquivos.
+5. **Implementar Repositories e Hooks:** Crie a camada de comunicação de dados (`services`, `repositories`) e construa os hooks customizados envolvendo o TanStack Query (`useQuery`, `useMutation`).
+6. **Implementar Web (Next.js/React):** Desenvolva a UI (Componentes, Layouts) utilizando o Design System e conecte-os aos hooks criados.
+7. **Implementar Mobile (React Native):** Replique o consumo dos mesmos *Repositories/Hooks* na interface Mobile, garantindo suporte offline via SQLite/Fila de Sincronização.
+8. **Criar testes:** Desenvolva testes unitários para lógicas complexas (ex: calculadoras de juros) e testes E2E para o fluxo feliz (Happy Path).
+9. **Atualizar documentação:** Mantenha os documentos refletindo a realidade. (Se o banco mudou, o `DATABASE.md` deve mudar).
+10. **Validar Definition of Done:** Checar o Checklist de Qualidade e Critérios de Aceite antes do Pull Request.
+
+---
+
+## 2. Ordem de Implementação
+
+A ordem de construção segue o princípio "De baixo para cima" (Bottom-Up) e "Dos Dados para a Tela":
+
+1. **Banco de Dados (DB):** Migration SQL -> Tabelas -> Relacionamentos -> RLS (Row Level Security).
+2. **Backend Services:** Triggers (PostgreSQL) -> Edge Functions (Deno).
+3. **API & Tipagens:** Gerar os Tipos (TypeScript) a partir do schema do Banco -> Criar Repositories (Fetch/Mutate).
+4. **Camada de Estado:** Configurar Hooks (TanStack Query) -> Estratégias de Invalidação de Cache (Optimistic Updates).
+5. **Frontend Web:** Componentes burros (UI) -> Formulários (Zod) -> Telas (Pages) -> Integração com o Estado.
+6. **Frontend Mobile:** Componentes Mobile-first -> Telas -> Sincronização e Cache Nativo.
+7. **Testes:** Unitários -> Integração -> E2E.
+8. **Deploy:** Pipeline CI/CD -> Vercel (Web) -> Expo EAS (Mobile).
+
+---
+
+## 3. Convenções de Código e Estrutura
+
+*   **Organização de Arquivos (Feature-Based):**
+    Agrupar arquivos por contexto, não por tipo. Exemplo: `/modules/transactions/` conterá seus próprios componentes, hooks e tipos específicos, consumindo o `/core/` apenas para itens globais.
+*   **Nomenclatura:**
+    *   Pastas e arquivos (Web/Componentes): `kebab-case` (ex: `transaction-card.tsx`).
+    *   Pastas e arquivos (Funções/Lógica): `camelCase` (ex: `formatCurrency.ts`).
+    *   Componentes e Interfaces: `PascalCase` (ex: `TransactionCard`, `IUser`).
+    *   Hooks: Iniciar com `use` em `camelCase` (ex: `useTransactions`).
+*   **Imports:**
+    *   Priorizar imports absolutos configurados (ex: `import { Button } from '@/core/ui/button'`).
+    *   Ordem de imports: Bibliotecas externas -> Contextos globais -> Componentes -> Hooks -> Utilitários -> Estilos.
+*   **Estrutura de Componentes:**
+    *   Separar componentes "Burros" (Apresentacionais, vivem na UI) de componentes "Inteligentes" (Conectados, contêm hooks de dados).
+*   **Camadas de Lógica:**
+    *   `services`: Apenas instâncias de conexão (ex: `supabaseClient.ts`).
+    *   `repositories`: Funções puras que interagem com o DB e retornam Promises (ex: `createExpense`). Nenhuma lógica de UI.
+    *   `hooks`: Envelopes do React (TanStack Query) sobre os repositories.
+
+---
+
+## 4. Regras para Novas Funcionalidades
+
+### Checklist Obrigatório ANTES de iniciar:
+- [ ] O PRD foi compreendido? A funcionalidade tem valor de negócio claro?
+- [ ] Os wireframes foram analisados e os estados (Error, Loading, Empty) foram previstos?
+- [ ] O impacto na estrutura do Banco de Dados foi validado? Não quebra outras features?
+- [ ] Foram definidos os Schemas de Validação (Zod)?
+
+### Checklist Obrigatório ANTES de finalizar:
+- [ ] Nenhuma biblioteca ou SDK externo extra foi adicionado sem aprovação.
+- [ ] Não existem lógicas de validação espalhadas pelos componentes (devem estar no Zod).
+- [ ] Sem chamadas de API soltas em `useEffect` (tudo deve usar TanStack Query).
+- [ ] Todos os novos estados persistidos têm políticas RLS ativas no banco.
+
+---
+
+## 5. Política de Refatoração
+
+**QUANDO Refatorar (Permitido):**
+*   Quando a performance começar a degradar de forma mensurável (ex: listas pesadas precisando de virtualização).
+*   Quando a mesma lógica (ex: formatação de datas, cálculo de impostos) for copiada para 3 ou mais lugares (Aplicar DRY).
+*   Quando as atualizações de dependências (ex: React 18 para 19, Supabase SDK) exigirem.
+
+**Quando NÃO Refatorar (Proibido):**
+*   Refatoração "fora de escopo" da tarefa atual (Scope Creep). Não altere o componente de Cartões enquanto estiver desenvolvendo o Cadastro de Usuário, a menos que seja estritamente necessário.
+*   Refatoração puramente estética do código (Trocar todos os `map` por `reduce`) que não traga benefício tangível de manutenção ou performance.
+*   Reescrever bibliotecas de UI base, se o Design System já atende.
+
+---
+
+## 6. Atualização da Documentação
+
+A documentação é a fonte da verdade. Ela deve ser atualizada de forma sincronizada com o código.
+*   **Se alterar o Banco de Dados:** Atualize o `DATABASE.md` (Diagramas, Índices, Relacionamentos).
+*   **Se criar/alterar comunicação (Supabase/Functions):** Atualize o `API.md`.
+*   **Se adicionar novas Telas/Fluxos:** Atualize o `WIREFRAMES.md` e `BACKLOG.md`.
+*   **Se alterar ou criar novos Tokens/Padrões Visuais:** Atualize o `DESIGN_SYSTEM.md`.
+
+---
+
+## 7. Checklist de Qualidade
+
+Antes de solicitar revisão, a funcionalidade deve passar pelo crivo de Qualidade:
+1.  **Performance:** Nenhuma tela pode fazer requisições duplicadas. Paginação deve estar implementada para listas crescentes (Extractos). Componentes otimizados (sem re-renders infinitos).
+2.  **Segurança:** Proteção total contra XSS e injeções. Tokens JWT seguros. Usuário não pode ver, sob nenhuma hipótese, dados de outro usuário (RLS testado).
+3.  **Acessibilidade (A11y):** Contraste legível (WCAG AA). Uso de `aria-labels` e suporte à navegação por teclado (`Tab`).
+4.  **Responsividade:** Testado em resoluções de Mobile (375px), Tablet (768px) e Desktop (1280px+). Nenhuma quebra horizontal (overflow).
+5.  **Compatibilidade Web/Mobile:** Lógicas de negócio centralizadas garantem que um cálculo de juros feito no navegador bata exatamente com o cálculo do App Android.
+
+---
+
+## 8. Critérios para Aprovação de uma Funcionalidade
+
+A funcionalidade (Feature) está **PRONTA (Done)** se, e somente se:
+*   Os critérios de aceite definidos no Backlog / User Story foram 100% cumpridos.
+*   Passou por QA técnico (Testes + Checklists de Qualidade deste guia).
+*   Não gerou regressões (bugs em áreas do sistema que já funcionavam).
+*   O Design foi implementado com fidelidade à filosofia descrita no `DESIGN_SYSTEM.md`.
+*   A sincronização offline/online foi testada e não gerou inconsistência de estado.
+
+---
+
+## 9. Fluxo de Pull Request (PR)
+
+1.  **Branching:** Crie a branch a partir da base principal (`develop` ou `main`).
+    *   Padrão: `feature/nome-da-feature`, `bugfix/descrição-do-bug`, `chore/atualizacao-de-pacote`.
+2.  **Commits:** Use Conventional Commits (`feat: add transfer form`, `fix: header padding on mobile`).
+3.  **Abertura do PR:**
+    *   Preencher o PR Template.
+    *   Anexar prints/vídeos das alterações visuais.
+    *   Referenciar a User Story/Task original.
+4.  **Revisão (Code Review):**
+    *   Revisor verifica Arquitetura, Segurança e Performance.
+    *   Aprovação mínima exigida antes do Merge.
+5.  **Integração:** Merge com estratégia `Squash and Merge` para manter o histórico principal limpo.
+
+---
+
+## 10. Roadmap de Implementação (Macro)
+
+Conforme ditado pelo `BACKLOG.md`, a execução dos desenvolvedores deve obedecer à seguinte esteira:
+
+*   **Fase 1:** Infraestrutura e Setup do Monorepo. (Base).
+*   **Fase 2:** Autenticação, Proteção de Rotas e Perfil (Identidade).
+*   **Fase 3:** Contas, Categorias e Dashboard Básico (Setup Financeiro).
+*   **Fase 4:** Transações, Transferências e Extratos (Movimentação e Cache).
+*   **Fase 5:** Cartões de Crédito e Recorrências (Dívida e Futuro).
+*   **Fase 6:** Orçamentos, Objetivos (Planejamento) e Sincronização Mobile pesada.
+*   **Fase 7:** Investimentos, Exportação de Dados e Relatórios avançados (Business Intelligence).
+*   **Fase 8:** Refinamento (Polish), Notificações Push e Preparação para Lançamento.
+
+
+=== PRD.md ===
+# Product Requirements Document (PRD) - Conta Comigo
+
+## 1. Visão Geral do Produto
+
+### Problema
+A maioria das pessoas possui múltiplas contas bancárias, cartões de crédito e investimentos espalhados em diferentes instituições. A falta de uma visão unificada e em tempo real do patrimônio e do fluxo de caixa gera descontrole financeiro, endividamento e dificuldade em atingir metas financeiras. Além disso, a falta de sincronia perfeita entre dispositivos móveis e web frustra usuários que buscam conveniência.
+
+### Solução
+O **Conta Comigo** é um ecossistema de gestão financeira pessoal composto por uma aplicação Web e um aplicativo Android nativo. Ele atua como um hub centralizado, permitindo o acompanhamento de receitas, despesas, cartões de crédito, orçamentos e investimentos em tempo real, com sincronização instantânea entre as plataformas.
+
+### Público-alvo
+Jovens adultos, profissionais liberais, chefes de família e investidores iniciantes/intermediários (faixa etária de 20 a 55 anos) que buscam organização financeira, controle de gastos e crescimento de patrimônio, e que valorizam interfaces modernas, limpas e sem atrito.
+
+### Objetivos
+- Fornecer uma visão 360º das finanças do usuário.
+- Reduzir o tempo gasto no fechamento de orçamentos mensais.
+- Ajudar na previsibilidade financeira através de alertas e projeções.
+- Garantir retenção de usuários através de uma experiência Multiplataforma (Web e Mobile) perfeitamente sincronizada.
+
+### Diferenciais
+- **Sincronização Real-Time:** Alterações na Web refletem no Android instantaneamente (e vice-versa).
+- **Design Premium:** Interface limpa, minimalista, inspirada em produtos como Linear, Stripe e Apple.
+- **Ecossistema Fechado:** Aplicativo Android verdadeiramente nativo (.apk), não apenas um WebView.
+- **Gestão de Investimentos Nativa:** Diferente de apps básicos, inclui controle de rentabilidade, dividendos e evolução patrimonial.
+
+### Benefícios
+- Tranquilidade financeira através do controle absoluto dos gastos.
+- Maior capacidade de poupança com o módulo de "Objetivos Financeiros".
+- Prevenção contra juros de cartões de crédito por meio de lembretes e visões de limite/faturas.
+
+---
+
+## 2. Personas
+
+### Persona 1: O Planejador Metódico
+- **Nome:** Carlos Eduardo
+- **Idade:** 35 anos
+- **Profissão:** Engenheiro de Software
+- **Objetivos:** Alcançar a independência financeira aos 50 anos e diversificar investimentos.
+- **Dificuldades:** Cansado de atualizar planilhas manuais e consolidar dados de 4 corretoras e bancos diferentes.
+- **Necessidades:** Gráficos detalhados, controle de dividendos (Ações/FIIs) e exportação de dados (Excel).
+
+### Persona 2: A Autônoma Dinâmica
+- **Nome:** Mariana Silva
+- **Idade:** 28 anos
+- **Profissão:** Designer Freelancer
+- **Objetivos:** Separar o dinheiro pessoal do profissional e ter previsibilidade de renda.
+- **Dificuldades:** Renda variável todos os meses, o que dificulta saber quanto pode gastar.
+- **Necessidades:** Fluxo de caixa claro, orçamentos flexíveis por categoria e relatórios mensais fáceis de ler.
+
+### Persona 3: O Gestor Familiar
+- **Nome:** Roberto Mendes
+- **Idade:** 45 anos
+- **Profissão:** Gerente Comercial
+- **Objetivos:** Pagar as contas da casa em dia, pagar a escola dos filhos e economizar para viagens.
+- **Dificuldades:** Muitos cartões de crédito da família para gerenciar, perdendo datas de vencimento.
+- **Necessidades:** Alertas de vencimento, módulo robusto de cartões (vencimento/fechamento) e visão de despesas fixas (assinaturas).
+
+### Persona 4: A Iniciante Financeira
+- **Nome:** Ana Clara
+- **Idade:** 22 anos
+- **Profissão:** Estudante e Estagiária
+- **Objetivos:** Guardar dinheiro para um intercâmbio e comprar o primeiro carro.
+- **Dificuldades:** Orçamento apertado, gasta muito com delivery e não sabe para onde o dinheiro vai.
+- **Necessidades:** Criação de metas (Objetivos), orçamentos com alertas de limite e interface gamificada/intuitiva (poucos cliques).
+
+### Persona 5: O Empreendedor Multi-Contas
+- **Nome:** Fernando Costa
+- **Idade:** 50 anos
+- **Profissão:** Empresário
+- **Objetivos:** Ter um "Raio-X" diário de seu patrimônio líquido.
+- **Dificuldades:** Dificuldade em visualizar o saldo total consolidado devido à alta fragmentação bancária.
+- **Necessidades:** Dashboard poderoso, alta segurança (2FA) e sincronização impecável entre o celular (na rua) e o PC (no escritório).
+
+---
+
+## 3. Casos de Uso
+
+**Autenticação e Perfil**
+- Fazer Cadastro (E-mail/Senha e Google).
+- Fazer Login.
+- Recuperar Senha.
+- Editar Perfil (Foto, Nome, Moeda, Idioma, Tema).
+- Ativar/Desativar Autenticação em 2 Fatores (2FA).
+
+**Contas e Cartões**
+- Cadastrar/Editar/Excluir Conta Bancária (com saldo inicial).
+- Cadastrar/Editar/Excluir Cartão de Crédito (Limite, Dia de Fechamento, Vencimento).
+
+**Transações (Receitas, Despesas e Transferências)**
+- Cadastrar Receita (Simples, Parcelada, Recorrente).
+- Cadastrar Despesa (Simples, Parcelada, Recorrente, via Conta ou Cartão).
+- Realizar Transferência entre Contas.
+- Anexar Comprovantes em Transações.
+- Editar/Excluir Transações (Refletindo em parcelas futuras ou isoladamente).
+
+**Investimentos**
+- Cadastrar/Editar/Excluir Ativo (Ações, FIIs, Cripto, Renda Fixa).
+- Registrar Recebimento de Dividendos/Rendimentos.
+
+**Planejamento e Metas**
+- Criar Objetivo Financeiro (Ex: "Viagem Europa").
+- Adicionar/Resgatar saldo de um Objetivo.
+- Criar Limite de Orçamento Mensal por Categoria.
+
+**Visões e Relatórios**
+- Visualizar Dashboard (Saldo Total, Fluxo Mensal).
+- Visualizar Calendário Financeiro.
+- Gerar Relatório Mensal/Anual.
+- Exportar Dados (PDF, Excel).
+
+---
+
+## 4. Regras de Negócio
+
+1. **Consistência de Saldo:** O "Saldo Atual" de uma conta deve ser a soma do "Saldo Inicial" com todas as transações (Receitas - Despesas + Transferências In - Transferências Out) até a data atual.
+2. **Transferências Duplas:** Uma transferência sempre debita de uma conta de origem e credita em uma conta de destino. Se excluída, ambas as movimentações são desfeitas.
+3. **Cartão de Crédito e Faturas:** Despesas feitas no Cartão de Crédito não afetam o saldo das contas bancárias imediatamente. Elas entram na Fatura. O saldo da conta só é impactado quando há uma transação de "Pagamento de Fatura".
+4. **Fechamento de Fatura:** Lançamentos feitos no dia do fechamento do cartão (ou após) devem ser contabilizados para a fatura do mês subsequente.
+5. **Transações Recorrentes:** Receitas ou Despesas marcadas como "Recorrentes" devem projetar lançamentos futuros automaticamente (infinitamente ou até um limite definido de meses).
+6. **Transações Parceladas:** Uma compra de R$ 1.200 em 12x no cartão deve gerar 12 despesas vinculadas de R$ 100, alocadas nos meses respectivos. A exclusão de uma compra parcelada deve perguntar se o usuário deseja excluir apenas a atual ou todas as subsequentes.
+7. **Exclusão Lógica (Soft Delete):** Dados críticos podem ser apenas inativados no banco para garantir rastreabilidade, mas ocultos para o usuário (dependerá da implementação do banco).
+8. **Categorias Customizadas:** O sistema deve vir com categorias padrão, mas o usuário tem liberdade para criar, editar (cor, ícone) e excluir as suas próprias, desde que não haja transações vinculadas a elas (ou realocar transações na exclusão).
+9. **Isolamento de Dados:** Usuário `A` jamais, sob nenhuma hipótese, pode acessar registros do Usuário `B` (Row Level Security restrito ao `user_id`).
+
+---
+
+## 5. Requisitos Funcionais
+
+- **RF-001:** O sistema deve permitir o cadastro de contas de usuário via E-mail/Senha e OAuth (Google).
+- **RF-002:** O sistema deve permitir a recuperação de senha via link de e-mail.
+- **RF-003:** O sistema deve possuir um Dashboard consolidado mostrando Saldo Geral, Saldo Investido, Receitas, Despesas e Gráfico de Fluxo de Caixa.
+- **RF-004:** O usuário deve poder cadastrar contas bancárias, especificando Nome, Tipo, Instituição, Cor, Ícone e Saldo Inicial.
+- **RF-005:** O usuário deve poder cadastrar cartões de crédito informando Limite, Dia de Vencimento e Dia de Fechamento.
+- **RF-006:** O sistema deve permitir o registro de despesas, vinculando-as a Categorias, e especificando a fonte de pagamento (Conta Bancária ou Cartão de Crédito).
+- **RF-007:** O sistema deve suportar despesas e receitas parceladas, gerando múltiplos registros automaticamente no banco de dados.
+- **RF-008:** O sistema deve suportar transações recorrentes mensais, anuais ou semanais.
+- **RF-009:** O sistema deve permitir upload de comprovantes (arquivos/imagens) atrelados a transações.
+- **RF-010:** O sistema deve possuir gestão de assinaturas recorrentes com visibilidade isolada.
+- **RF-011:** O módulo de investimentos deve permitir registro manual de compras e vendas de ativos e recebimento de proventos.
+- **RF-012:** O usuário deve poder definir orçamentos mensais com alertas baseados em categorias (ex: Limite de R$ 500 em Delivery).
+- **RF-013:** O sistema deve ter um Calendário Financeiro onde transações futuras e passadas são plotadas nos dias do mês.
+- **RF-014:** O usuário deve ser capaz de criar Metas/Objetivos financeiros, definindo um valor alvo e acompanhando o progresso através do saldo alocado.
+- **RF-015:** O sistema deve emitir relatórios comparativos entre meses (Receitas vs Despesas).
+- **RF-016:** O sistema deve permitir a exportação dos extratos em formatos PDF e CSV/Excel.
+- **RF-017:** O usuário deve poder personalizar seu perfil (tema dark/light, idioma, moeda base).
+- **RF-018:** O sistema deve enviar Lembretes e Push Notifications para contas a vencer (Mobile) e alertas in-app (Web).
+
+---
+
+## 6. Requisitos Não Funcionais
+
+- **RNF-001 (Segurança - RLS):** Todas as tabelas do banco de dados (Supabase) devem possuir políticas rigorosas de Row Level Security.
+- **RNF-002 (Performance):** A aplicação frontend deve utilizar lazy loading para rotas e componentes pesados. Imagens devem ser otimizadas. As respostas de API devem ocorrer, em média, abaixo de 300ms.
+- **RNF-003 (Sincronização):** Alterações de dados (Web ou Mobile) devem ser sincronizadas via Supabase Realtime/Websockets e refletidas no outro cliente em menos de 2 segundos.
+- **RNF-004 (Offline-first):** O aplicativo Mobile (React Native) deve possuir cache local robusto, permitindo visualização do extrato sem conexão à internet e enfileirando requisições de criação de transações quando offline.
+- **RNF-005 (Responsividade):** A interface Web deve ser 100% responsiva (Mobile-first em CSS), adaptando-se a smartphones, tablets e desktops.
+- **RNF-006 (Escalabilidade):** A arquitetura Serverless (Next.js Edge/Supabase Functions) deve escalar automaticamente para suportar milhares de usuários simultâneos.
+- **RNF-007 (Disponibilidade):** O sistema deve visar um uptime de 99.9%.
+- **RNF-008 (LGPD):** Os dados dos usuários devem ser criptografados. O sistema deve prover funcionalidade para que o usuário baixe todos os seus dados e exclua sua conta definitivamente.
+- **RNF-009 (Acessibilidade):** O frontend deve garantir contraste adequado (WCAG) e suporte à navegação via teclado para as funcionalidades principais.
+- **RNF-010 (Backup):** O banco de dados Supabase deve possuir rotinas automatizadas de backup PITR (Point-in-Time Recovery).
+
+---
+
+## 7. Fluxo Geral do Usuário
+
+1. **Onboarding:** O usuário se cadastra (Google ou Email). É apresentado a uma tela de boas-vindas.
+2. **Setup Inicial:** O sistema pede para cadastrar a primeira Conta Bancária informando o Saldo Atual.
+3. **Exploração:** O usuário é levado ao Dashboard principal (ainda vazio, com Call to Actions).
+4. **Primeiro Lançamento:** O usuário cadastra suas despesas fixas do mês (Aluguel, Luz) e sua renda mensal.
+5. **Visualização:** Os gráficos do Dashboard ganham vida, mostrando a sobra projetada de caixa.
+6. **Maturidade de Uso:** O usuário cadastra seu Cartão de Crédito. Ele começa a lançar os gastos diários (Ifood, Uber) pelo aplicativo Mobile (Android) enquanto está na rua.
+7. **Fechamento:** Ao fim do mês, ele acessa o sistema Web no computador, analisa os Relatórios de Categorias para entender os gargalos, ajusta o Orçamento do mês seguinte e acompanha o avanço do seu "Objetivo" de viagem.
+
+---
+
+## 8. Estrutura dos Módulos
+
+- **Autenticação:** (Login, Signup, Recovery).
+- **Dashboard:** Visão consolidada, widgets e gráficos rápidos.
+- **Contas Bancárias:** Gerenciamento de saldos diretos.
+- **Cartões de Crédito:** Faturas, limites, dias de vencimento.
+- **Transações:** Motor principal de Receitas, Despesas e Transferências.
+- **Categorias & Tags:** Motor de organização.
+- **Planejamento:** Orçamentos (Budgets) e Metas (Objetivos).
+- **Investimentos:** Gerenciamento patrimonial.
+- **Assinaturas & Contas Fixas:** Visão isolada para previsibilidade.
+- **Relatórios:** Dashboards avançados, exportações.
+- **Configurações & Perfil:** Temas, 2FA, LGPD.
+
+---
+
+## 9. Roadmap Inicial
+
+**Fase 1: Planejamento, Arquitetura e Setup (Concluída)**
+- Definição do PRD.
+- Configuração do Repositório (Lógica Monorepo).
+- Provisionamento do Banco e RLS (Supabase).
+- Setup Vite + Tailwind + Shadcn.
+
+**Fase 2: Autenticação e Perfil**
+- Integração Supabase Auth.
+- Telas de Login, Cadastro e Esqueceu a Senha.
+- Componente de Layout Autenticado (Sidebar + Header protegidos).
+
+**Fase 3: Core Financeiro (O Coração)**
+- CRUD de Contas Bancárias.
+- CRUD de Categorias.
+- CRUD Simples de Transações (Receitas e Despesas unificadas).
+- Dashboard Básico (Cálculo de Saldos).
+
+**Fase 4: Cartões e Complexidade de Transações**
+- CRUD de Cartões de Crédito.
+- Lançamentos em Cartão (Vinculação a faturas).
+- Parcelamentos e Recorrências.
+- Transferências entre contas.
+
+**Fase 5: Ferramentas de Visualização**
+- Extrato Detalhado com Filtros e Buscas.
+- Gráficos de Fluxo de Caixa (Dashboard Avançado).
+- Relatórios Mensais por Categoria.
+
+**Fase 6: Planejamento e Inteligência**
+- Módulo de Objetivos Financeiros (Metas).
+- Definição e acompanhamento de Orçamentos mensais.
+- Calendário Financeiro.
+
+**Fase 7: Investimentos e Exportação**
+- Carteira de Investimentos básica.
+- Exportação PDF/CSV.
+
+**Fase 8: Sincronização Mobile & Polimento Final**
+- Inicialização e integração do App Android (React Native).
+- Setup de WebSockets/Realtime para sincronização UI imediata.
+- Notificações (Push e In-App).
+
+
+=== README.md ===
+# Conta Comigo - Sistema de Gestão Financeira Pessoal
+
+## Visão Geral
+Sistema profissional para gestão de finanças pessoais, projetado para escalar para milhares de usuários. O ecossistema é composto por uma aplicação Web e um aplicativo Android nativo, operando sob uma arquitetura de Monorepo com backend Serverless.
+
+## Tecnologias Principais
+- **Frontend Web:** React, Vite (adaptado do Next.js para este ambiente), TypeScript, Tailwind CSS, Shadcn/UI.
+- **Frontend Mobile:** React Native, Expo (Estrutura planejada para o ecossistema externo).
+- **Gerenciamento de Estado/Dados:** TanStack Query, React Hook Form, Zod.
+- **Backend/Database:** Supabase (PostgreSQL, Auth, Storage, Edge Functions).
+
+## Princípios de Engenharia
+- **Clean Architecture & SOLID:** Separação clara de responsabilidades, regras de negócio isoladas de frameworks.
+- **DRY & KISS:** Código reutilizável, simples e de fácil manutenção.
+- **Segurança First:** RLS (Row Level Security) no Supabase, validações com Zod em todas as pontas, sanitização e proteção CSRF/XSS.
+- **Performance:** Lazy loading, otimização de bundle, paginação e cache distribuído (TanStack Query).
+
+## Status do Projeto
+Atualmente na **Fase 1: Planejamento, Arquitetura e Documentação**.
+Consulte o arquivo `ROADMAP.md` para visualizar as próximas entregas.
+
+
+=== ROADMAP.md ===
+# Roadmap do Projeto: Conta Comigo
+
+Este roadmap reflete as Sprints de desenvolvimento executadas e planejadas utilizando metodologias ágeis.
+
+## Concluído
+
+- **Sprint 1 — Autenticação:** Autenticação completa via Supabase, RLS, Guards de Rotas e UI Foundation.
+- **Sprint 2 — Onboarding e Configuração Inicial:** Fluxo multi-step, criação de perfil, moedas, preferências e setup inicial.
+- **Sprint 3 — Dashboard Financeiro:** Visão consolidada de caixa, gráficos base e resumo financeiro.
+- **Sprint 4 — Gestão de Transações:** CRUD de Receitas e Despesas, histórico e filtros.
+- **Sprint 5 — Gestão de Contas Financeiras:** CRUD de contas bancárias e carteiras, saldo consolidado.
+- **Sprint 6 — Categorias Financeiras Personalizadas:** Gestão de categorias por tipo (Receita/Despesa), padrões vs personalizadas.
+- **Sprint 7 — Metas Financeiras:** Criação de objetivos, rastreio de progresso e atualizações de status.
+
+## Próximos Passos (Planejado)
+
+- **Sprint 8 — Relatórios Financeiros:** Filtros avançados, visualizações de fluxo de caixa por período, exportação de dados (PDF/CSV).
+- **Sprint 9 — Assinaturas e Cartões de Crédito:** Cadastro de cartões de crédito, lançamentos recorrentes, controle de faturas e parcelamentos.
+- **Sprint 10 — Orçamentos (Budgets):** Definição de limites de gastos por categoria e alertas visuais de estouro.
+- **Sprint 11 — Investimentos:** Cadastro de carteiras, ativos (bolsa/renda fixa) e consolidação de rendimentos.
+- **Sprint 12 — Configurações Avançadas e PWA:** Exportação completa, LGPD, exclusão de conta, sincronização offline (preparação PWA/Mobile).
+
+
+=== WIREFRAMES.md ===
+# Documentação de Wireframes e Estrutura Visual - Conta Comigo
+
+Este documento descreve a estrutura visual, a disposição dos elementos e o fluxo de interação das telas do ecossistema Conta Comigo (Web e Mobile), sem detalhar implementações em código.
+
+---
+
+## 1. Layout Base (Estruturas Globais)
+
+### 1.1. Desktop (Web)
+*   **Objetivo:** Prover navegação rápida para usuários com telas maiores.
+*   **Componentes:** Sidebar fixa (à esquerda), Top Header, Área de Conteúdo principal.
+*   **Layout:**
+    *   **Sidebar:** Logotipo no topo. Lista de links de navegação com ícones (Dashboard, Extrato, Contas, Cartões, Investimentos, Relatórios, etc.). No final, atalho de Configurações e mini-perfil do usuário.
+    *   **Header:** Breadcrumb (migalhas de pão) indicando a página atual. Barra de busca global, ícone de notificação e botão primário "Nova Transação".
+*   **Responsividade:** No Tablet, a Sidebar retrai e exibe apenas ícones (Collapsed).
+
+### 1.2. Mobile (Android / Web Mobile)
+*   **Objetivo:** Acesso rápido e prático com uma mão (Thumb Zone).
+*   **Componentes:** Bottom Navigation Bar, Top App Bar simplificada, Floating Action Button (FAB).
+*   **Layout:**
+    *   **Bottom Navigation:** 4 a 5 abas principais (Ex: Início, Extrato, Metas, Perfil).
+    *   **FAB:** Posicionado no centro da Bottom Navigation ou flutuando à direita, dedicado à ação "Nova Transação".
+    *   **Bottom Sheets:** Usados para criação/edição e filtros complexos, deslizando de baixo para cima.
+
+---
+
+## 2. Autenticação (Login, Cadastro, Recuperação)
+
+### Telas: Login, Cadastro, Recuperação de Senha, Verificação
+*   **Objetivo:** Permitir a entrada segura do usuário no sistema.
+*   **Layout:**
+    *   Split-screen em Desktop: Lado esquerdo com formulário centralizado. Lado direito com arte abstrata da marca, ou padrão geométrico.
+    *   Em Mobile: Formulário centralizado ocupando a tela toda.
+*   **Componentes:** Inputs de E-mail e Senha, Botão Primário de Ação, Botão Secundário "Entrar com Google", Links de "Esqueci a senha".
+*   **Navegação:** Redirecionamento automático para o Dashboard após sucesso.
+*   **Estados:**
+    *   **Loading:** Botão principal exibe spinner e desabilita campos.
+    *   **Error:** Inputs ficam com borda vermelha (Danger) e mensagem inline de texto. Toast superior para erro de servidor.
+    *   **Offline:** Desabilita formulário e exibe aviso "Sem conexão".
+*   **Responsividade:** O painel de arte do lado direito desaparece no Tablet e Mobile, focando apenas no formulário.
+
+---
+
+## 3. Dashboard
+
+### Telas: Dashboard Principal, Dashboard Mobile
+*   **Objetivo:** Visão panorâmica imediata da saúde financeira.
+*   **Layout:**
+    *   **Topo:** Seletor de mês.
+    *   **Primeira Linha (KPIs):** 4 Cards exibindo Saldo Total, Investimentos, Total de Receitas (mês) e Total de Despesas (mês).
+    *   **Meio:** Gráfico de Fluxo de Caixa (Barras ou Linha).
+    *   **Inferior/Lado:** Lista de "Últimas Transações" (Atividades recentes).
+*   **Navegação:** Clicar nos KPIs leva para os relatórios detalhados correspondentes. Clicar numa transação abre seus Detalhes.
+*   **Estados:**
+    *   **Loading:** Skeletons piscantes sobre os cartões de KPI e gráficos.
+    *   **Empty:** Se não houver dados, o gráfico é substituído por uma ilustração amigável: "Sua jornada começa aqui. Adicione seu primeiro lançamento."
+    *   **Success:** Exibição normal.
+    *   **Offline:** Mostra dados do último cache, com uma badge amarela "Você está offline" no Header.
+
+---
+
+## 4. Contas Bancárias
+
+### Telas: Lista de Contas, Detalhes da Conta, Nova Conta, Editar, Excluir
+*   **Objetivo:** Gerenciar as fontes de saldo real do usuário.
+*   **Layout (Lista):** Grid de Cards (Desktop) ou Lista Vertical (Mobile). Cada card exibe: Ícone/Logo do banco, Nome da Conta, Tipo e Saldo atual em destaque.
+*   **Layout (Detalhes):** Header com os dados da conta. Abaixo, uma tabela restrita às transações daquela conta específica.
+*   **Layout (Nova/Editar):** Modal (Web) ou Bottom Sheet (Mobile) com formulário: Nome, Banco, Saldo Inicial, Cor e Ícone.
+*   **Estados:**
+    *   **Empty (Lista):** "Nenhuma conta cadastrada". Botão CTA primário evidente.
+    *   **Error (Exclusão):** "Não é possível excluir uma conta que possui transações".
+
+---
+
+## 5. Cartões de Crédito e Faturas
+
+### Telas: Lista de Cartões, Novo, Editar, Faturas (Timeline), Pagamento
+*   **Objetivo:** Controlar limite de crédito rotativo e vencimentos de fatura.
+*   **Layout (Lista):** Exibição de cards simulando cartões físicos (proporção 1.58:1). Exibe Limite Disponível, Limite Utilizado (barra de progresso) e Valor da Fatura Atual.
+*   **Layout (Fatura):** Timeline vertical. Seletor de meses no topo. Lista detalhada dos lançamentos parcelados e pontuais da fatura selecionada. Botão "Pagar Fatura".
+*   **Layout (Pagamento):** Um modal onde o usuário escolhe a "Conta de Origem" que debitará o valor da fatura.
+*   **Estados:**
+    *   **Warning:** Barra de limite perto de 100% fica na cor Laranja/Vermelha.
+    *   **Empty (Fatura):** Ilustração minimalista: "Nenhuma compra neste mês".
+
+---
+
+## 6. Transações (Receitas, Despesas e Transferências)
+
+### Telas: Lista de Extrato, Novo Lançamento, Detalhes, Filtros
+*   **Objetivo:** Visualização detalhada e entrada de caixa.
+*   **Layout (Lista/Extrato):** Tabela (Desktop) ou Lista densa (Mobile). Colunas/Dados: Data, Descrição, Categoria, Conta e Valor. Valores positivos em verde (Emerald), negativos em texto padrão.
+*   **Layout (Filtros):** Na Web, um painel superior expansível. No Mobile, um Bottom Sheet com opções de Filtrar por Categoria, Conta, Período e Tipo.
+*   **Layout (Cadastro de Despesa/Receita):**
+    *   Input gigante para Valor no topo (como uma calculadora).
+    *   Campos para Descrição, Data, Categoria, Conta Origem/Cartão.
+    *   Toggle para "Repetir" (abre opções de Parcelamento ou Recorrência mensal).
+*   **Layout (Transferência):** Exige duas contas. "De (Conta A)" para "Para (Conta B)".
+*   **Navegação:** Ações em lote (Desktop) ao selecionar checkboxes na tabela (Excluir vários).
+*   **Estados (Offline):** Badge "Sincronização pendente" num lançamento criado sem internet.
+
+---
+
+## 7. Categorias
+
+### Telas: Lista, Nova Categoria, Editar
+*   **Objetivo:** Gerenciar as gavetas organizacionais do sistema.
+*   **Layout:** Lista simples com Ícone, Cor correspondente, Nome e Tipo (Despesa/Receita).
+*   **Layout (Formulário):** Picker de cor (paleta pré-definida) e Grid de ícones (Lucide) selecionáveis.
+
+---
+
+## 8. Objetivos Financeiros (Metas)
+
+### Telas: Lista de Objetivos, Detalhes, Criar, Editar
+*   **Objetivo:** Gamificar o acúmulo de patrimônio.
+*   **Layout (Lista):** Cards de progresso. Nome do objetivo, ícone, "R$ Guardado de R$ Meta". Barra de progresso circular ou horizontal grossa.
+*   **Layout (Detalhes):** Gráfico de linha mostrando a evolução do saldo reservado. Botões de ação rápida: "Adicionar Dinheiro" e "Resgatar".
+*   **Estados (Success):** Quando o objetivo atinge 100%, exibe badge dourada/emerald e confetes contidos na animação de conclusão.
+
+---
+
+## 9. Investimentos
+
+### Telas: Carteira (Visão Geral), Detalhes do Ativo, Dividendos
+*   **Objetivo:** Acompanhamento patrimonial avançado.
+*   **Layout (Carteira):** Gráfico de Pizza/Donut (Alocação da carteira). Tabela de ativos com colunas: Ticker, Quantidade, Preço Médio, Cotação Atual, Lucro/Prejuízo (%).
+*   **Layout (Dividendos):** Calendário anual ou tabela de eventos corporativos mostrando pagamentos.
+*   **Navegação:** Tabelas ricas que permitem ordenação clicando no cabeçalho das colunas (ex: ordenar por maior lucro).
+
+---
+
+## 10. Relatórios
+
+### Telas: Visão Mensal, Anual, Por Categorias, Exportação
+*   **Objetivo:** Análise profunda e cruzamento de dados.
+*   **Layout (Dashboard de Relatórios):**
+    *   Gráfico de Barras Sobrepostas (Receitas vs Despesas do ano inteiro).
+    *   Gráfico de Pizza interativo (Despesas por Categoria).
+    *   Módulo de Exportação: Área com botões visíveis para baixar PDF e CSV/Excel.
+*   **Responsividade:** Gráficos no mobile ganham scroll horizontal se a janela de tempo for muito longa (ex: 12 meses).
+
+---
+
+## 11. Perfil e Configurações
+
+### Telas: Preferências, Segurança, Backup
+*   **Objetivo:** Ajustar preferências pessoais do sistema.
+*   **Layout:** Estrutura de ListSettings (Listas de opções comuns no iOS/Android).
+    *   Avatar editável no topo.
+    *   Seções separadas por agrupamentos: "Geral" (Tema, Idioma, Moeda), "Segurança" (Alterar Senha, 2FA), "Dados" (Exportar tudo, Excluir conta).
+*   **Navegação:** Menus que abrem páginas subsequentes em slide-in.
+
+---
+
+## 12. Notificações
+
+### Telas: Lista de Notificações, Detalhes
+*   **Objetivo:** Central de alertas (vencimentos e orçamentos estourados).
+*   **Layout:** Drawer (Desktop) que desliza da direita para a esquerda ao clicar no ícone de sino. No Mobile, uma página dedicada. Lista de itens com "bolinha azul" para não-lidos.
+
+---
+
+## 13. Mapas de Navegação e Fluxos
+
+### 13.1. Mapa Completo de Navegação (Sitemap)
+```text
+(Auth)
+ ├── Login
+ ├── Cadastro
+ └── Recuperar Senha
+
+(App)
+ ├── Dashboard
+ ├── Extrato (Transações)
+ │    ├── Nova Receita
+ │    ├── Nova Despesa
+ │    └── Nova Transferência
+ ├── Contas e Cartões
+ │    ├── Gerenciar Contas
+ │    └── Faturas do Cartão
+ ├── Planejamento
+ │    ├── Orçamentos Mensais
+ │    └── Objetivos (Metas)
+ ├── Investimentos
+ │    ├── Carteira
+ │    └── Proventos
+ ├── Relatórios
+ └── Configurações
+      ├── Perfil
+      ├── Categorias
+      └── Segurança
+```
+
+### 13.2. Fluxo Principal do Usuário (Happy Path Financeiro)
+1.  Usuário visualiza **Dashboard**.
+2.  Toca no **FAB (Floating Action Button)**.
+3.  Abre o Bottom Sheet de **Adicionar Despesa**.
+4.  Digita valor "150,00".
+5.  Seleciona categoria "Supermercado".
+6.  Seleciona a conta "Conta Corrente" ou "Cartão de Crédito".
+7.  Clica em "Salvar".
+8.  Bottom sheet fecha, **Toast** verde de sucesso é exibido.
+9.  Os gráficos do **Dashboard** são recalculados instantaneamente na tela.
+
+### 13.3. Fluxo de Autenticação e Onboarding
+1.  Abre o App -> Tela de Splash.
+2.  Tela de Login -> Clica em "Criar Conta".
+3.  Preenche E-mail, Senha e Nome.
+4.  Redirecionado ao App vazio.
+5.  Modal Interceptador "Onboarding": "Bem-vindo. Vamos cadastrar sua primeira conta."
+6.  Preenche saldo inicial -> Pronto para uso.
+
+### 13.4. Fluxo de Exportação e Relatórios
+1.  Acessa o menu **Relatórios**.
+2.  Visualiza gráfico Anual.
+3.  Clica em botão secundário **Exportar**.
+4.  Modal: "Selecione o período e o formato".
+5.  Seleciona "Ano 2024" e formato "PDF".
+6.  Clica "Baixar" -> Estado **Loading** -> Download inicia -> Estado **Success** (Toast).
+

@@ -6,6 +6,15 @@ export class AuthRepository {
     return supabase.auth.signInWithPassword({ email, password });
   }
 
+  async loginWithGoogle() {
+    return supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`
+      }
+    });
+  }
+
   async signup({ email, password, name }: SignupDTO) {
     return supabase.auth.signUp({
       email,

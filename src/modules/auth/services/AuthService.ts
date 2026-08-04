@@ -8,6 +8,12 @@ export class AuthService {
     return data;
   }
 
+  async loginWithGoogle() {
+    const { data, error } = await authRepository.loginWithGoogle();
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
   async signup(dto: SignupDTO) {
     const { data, error } = await authRepository.signup(dto);
     if (error) throw new Error(error.message);

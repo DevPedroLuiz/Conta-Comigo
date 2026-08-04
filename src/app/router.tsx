@@ -28,7 +28,16 @@ import { GoalCreatePage } from '../modules/goals/pages/GoalCreatePage';
 import { GoalEditPage } from '../modules/goals/pages/GoalEditPage';
 import { ReportsPage } from '../modules/reports/pages/ReportsPage';
 
-const PlaceholderSettings = () => <div className="p-4">Settings Placeholder</div>;
+import { SettingsPage } from '../modules/settings/pages/SettingsPage';
+import { BudgetsPage } from '../modules/budgets/pages/BudgetsPage';
+import { BudgetCreatePage } from '../modules/budgets/pages/BudgetCreatePage';
+import { BudgetEditPage } from '../modules/budgets/pages/BudgetEditPage';
+import { CalendarPage } from '../modules/calendar/pages/CalendarPage';
+import { CreditCardsPage } from '../modules/credit-cards/pages/CreditCardsPage';
+import { CreditCardCreatePage } from '../modules/credit-cards/pages/CreditCardCreatePage';
+import { CreditCardInvoicesPage } from '../modules/credit-cards/pages/CreditCardInvoicesPage';
+import { SubscriptionsPage } from '../modules/subscriptions/pages/SubscriptionsPage';
+
 
 export const router = createBrowserRouter([
   {
@@ -80,7 +89,16 @@ export const router = createBrowserRouter([
       { path: 'goals/new', element: <GoalCreatePage /> },
       { path: 'goals/:id/edit', element: <GoalEditPage /> },
       { path: 'reports', element: <ReportsPage /> },
-      { path: 'settings', element: <PlaceholderSettings /> },
+      { path: 'budgets', element: <BudgetsPage /> },
+      { path: 'budgets/new', element: <BudgetCreatePage /> },
+      { path: 'budgets/:id/edit', element: <BudgetEditPage /> },
+      { path: 'calendar', element: <CalendarPage /> },
+      { path: 'settings', element: <SettingsPage /> },
+      { path: 'credit-cards', element: <CreditCardsPage /> },
+      { path: 'credit-cards/new', element: <CreditCardCreatePage /> },
+      { path: 'credit-cards/:id/invoices', element: <CreditCardInvoicesPage /> },
+      { path: 'subscriptions', element: <SubscriptionsPage /> },
+
     ],
   },
 ]);

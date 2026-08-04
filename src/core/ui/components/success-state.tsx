@@ -25,7 +25,7 @@ export function SuccessState({
     >
       <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
-          <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+          <CheckCircle2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
         </div>
         <h2 className="mt-6 text-xl font-semibold text-foreground">{title}</h2>
         {description && (

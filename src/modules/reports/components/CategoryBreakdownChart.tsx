@@ -10,11 +10,11 @@ interface CategoryBreakdownChartProps {
 export function CategoryBreakdownChart({ data, title }: CategoryBreakdownChartProps) {
   if (!data || data.length === 0) {
     return (
-      <Card className="bg-[#0c0c0e] border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle className="text-lg">{title}</CardTitle>
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center text-zinc-500">
+        <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground">
           Nenhum dado para exibir.
         </CardContent>
       </Card>
@@ -22,7 +22,7 @@ export function CategoryBreakdownChart({ data, title }: CategoryBreakdownChartPr
   }
 
   return (
-    <Card className="bg-[#0c0c0e] border-zinc-800">
+    <Card className="bg-card border-border">
       <CardHeader>
         <CardTitle className="text-lg">{title}</CardTitle>
       </CardHeader>

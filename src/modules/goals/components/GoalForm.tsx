@@ -42,7 +42,7 @@ export function GoalForm({ initialData, onSubmit, isLoading, onDelete }: GoalFor
           placeholder="Ex: Reserva de Emergência, Viagem para Paris..."
           {...register('name')}
         />
-        {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+        {errors.name && <p className="text-sm text-destructive dark:text-red-400">{errors.name.message}</p>}
       </div>
 
       <div className="space-y-2">
@@ -52,14 +52,14 @@ export function GoalForm({ initialData, onSubmit, isLoading, onDelete }: GoalFor
           placeholder="Detalhes sobre a meta..."
           {...register('description')}
         />
-        {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
+        {errors.description && <p className="text-sm text-destructive dark:text-red-400">{errors.description.message}</p>}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="target_amount">Valor Objetivo</Label>
           <div className="relative">
-            <span className="absolute left-3 top-2.5 text-zinc-500">R$</span>
+            <span className="absolute left-3 top-2.5 text-muted-foreground">R$</span>
             <Input
               id="target_amount"
               type="number"
@@ -69,13 +69,13 @@ export function GoalForm({ initialData, onSubmit, isLoading, onDelete }: GoalFor
               {...register('target_amount')}
             />
           </div>
-          {errors.target_amount && <p className="text-sm text-destructive">{errors.target_amount.message}</p>}
+          {errors.target_amount && <p className="text-sm text-destructive dark:text-red-400">{errors.target_amount.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="current_amount">Valor Inicial/Atual</Label>
           <div className="relative">
-            <span className="absolute left-3 top-2.5 text-zinc-500">R$</span>
+            <span className="absolute left-3 top-2.5 text-muted-foreground">R$</span>
             <Input
               id="current_amount"
               type="number"
@@ -85,7 +85,7 @@ export function GoalForm({ initialData, onSubmit, isLoading, onDelete }: GoalFor
               {...register('current_amount')}
             />
           </div>
-          {errors.current_amount && <p className="text-sm text-destructive">{errors.current_amount.message}</p>}
+          {errors.current_amount && <p className="text-sm text-destructive dark:text-red-400">{errors.current_amount.message}</p>}
         </div>
       </div>
 
@@ -97,7 +97,7 @@ export function GoalForm({ initialData, onSubmit, isLoading, onDelete }: GoalFor
             type="date"
             {...register('deadline')}
           />
-          {errors.deadline && <p className="text-sm text-destructive">{errors.deadline.message}</p>}
+          {errors.deadline && <p className="text-sm text-destructive dark:text-red-400">{errors.deadline.message}</p>}
         </div>
 
         {isEditing && (
@@ -116,18 +116,18 @@ export function GoalForm({ initialData, onSubmit, isLoading, onDelete }: GoalFor
                 <SelectItem value="cancelled">Cancelada</SelectItem>
               </SelectContent>
             </Select>
-            {errors.status && <p className="text-sm text-destructive">{errors.status.message}</p>}
+            {errors.status && <p className="text-sm text-destructive dark:text-red-400">{errors.status.message}</p>}
           </div>
         )}
       </div>
 
-      <div className="flex gap-4 justify-between pt-4 border-t border-zinc-800">
+      <div className="flex gap-4 justify-between pt-4 border-t border-border">
         <div>
           {isEditing && onDelete && (
             <Button 
               type="button" 
               variant="outline" 
-              className="text-destructive border-destructive/20 hover:bg-destructive/10 hover:text-destructive"
+              className="text-destructive dark:text-red-400 border-destructive/20 hover:bg-destructive/10 hover:text-destructive dark:text-red-400"
               onClick={onDelete}
               disabled={isLoading}
             >

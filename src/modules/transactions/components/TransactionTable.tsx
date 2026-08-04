@@ -12,17 +12,17 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
   const navigate = useNavigate();
 
   return (
-    <div className="rounded-md border border-zinc-800">
+    <div className="rounded-md border border-border">
       <div className="w-full overflow-auto">
         <table className="w-full text-sm">
-          <thead className="bg-zinc-800/50">
-            <tr className="border-b border-zinc-800">
-              <th className="h-10 px-4 text-left font-medium text-zinc-400">Data</th>
-              <th className="h-10 px-4 text-left font-medium text-zinc-400">Descrição</th>
-              <th className="h-10 px-4 text-left font-medium text-zinc-400">Categoria</th>
-              <th className="h-10 px-4 text-left font-medium text-zinc-400">Conta</th>
-              <th className="h-10 px-4 text-right font-medium text-zinc-400">Valor</th>
-              <th className="h-10 px-4 text-center font-medium text-zinc-400 w-24">Ações</th>
+          <thead className="bg-muted/50">
+            <tr className="border-b border-border">
+              <th className="h-10 px-4 text-left font-medium text-muted-foreground">Data</th>
+              <th className="h-10 px-4 text-left font-medium text-muted-foreground">Descrição</th>
+              <th className="h-10 px-4 text-left font-medium text-muted-foreground">Categoria</th>
+              <th className="h-10 px-4 text-left font-medium text-muted-foreground">Conta</th>
+              <th className="h-10 px-4 text-right font-medium text-muted-foreground">Valor</th>
+              <th className="h-10 px-4 text-center font-medium text-muted-foreground w-24">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -35,7 +35,7 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
               }).format(tx.amount);
 
               return (
-                <tr key={tx.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                <tr key={tx.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                   <td className="p-4 align-middle whitespace-nowrap">{formattedDate}</td>
                   <td className="p-4 align-middle font-medium">{tx.description}</td>
                   <td className="p-4 align-middle">
@@ -48,7 +48,7 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
                     </div>
                   </td>
                   <td className="p-4 align-middle">{tx.accounts?.name || '---'}</td>
-                  <td className={`p-4 align-middle text-right font-medium ${isIncome ? 'text-emerald-500' : 'text-zinc-100'}`}>
+                  <td className={`p-4 align-middle text-right font-medium ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
                     {isIncome ? '+' : '-'}{formattedAmount}
                   </td>
                   <td className="p-4 align-middle text-center">
@@ -56,7 +56,7 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-8 w-8 text-zinc-400 hover:text-white"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
                         onClick={() => navigate(`/transactions/${tx.id}/edit`)}
                       >
                         <Pencil className="h-4 w-4" />
@@ -64,7 +64,7 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-8 w-8 text-zinc-400 hover:text-destructive"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive dark:text-red-400"
                         onClick={() => onDelete(tx.id)}
                       >
                         <Trash2 className="h-4 w-4" />

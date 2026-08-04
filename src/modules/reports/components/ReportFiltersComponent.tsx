@@ -36,7 +36,13 @@ export function ReportFiltersComponent({ onFiltersChange, userId }: ReportFilter
   }, [userId]);
 
   const handleFilterChange = (key: keyof ReportFilters, value: string) => {
-    const newFilters = { ...filters, [key]: value };
+    let newFilters = { ...filters, [key]: value };
+    if (key === 'startDate' && new Date(value) > new Date(newFilters.endDate)) {
+      newFilters.endDate = value;
+    }
+    if (key === 'endDate' && new Date(newFilters.startDate) > new Date(value)) {
+      newFilters.startDate = value;
+    }
     setFilters(newFilters);
     onFiltersChange({
       ...newFilters,
@@ -46,30 +52,30 @@ export function ReportFiltersComponent({ onFiltersChange, userId }: ReportFilter
   };
 
   return (
-    <Card className="bg-[#0c0c0e] border-zinc-800 mb-6">
+    <Card className="bg-card border-border mb-6">
       <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="space-y-2">
-          <Label className="text-zinc-400">Data Inicial</Label>
+          <Label className="text-muted-foreground">Data Inicial</Label>
           <Input 
             type="date" 
             value={filters.startDate} 
             onChange={(e) => handleFilterChange('startDate', e.target.value)} 
-            className="bg-zinc-900 border-zinc-800"
+            className="bg-background border-border"
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-zinc-400">Data Final</Label>
+          <Label className="text-muted-foreground">Data Final</Label>
           <Input 
             type="date" 
             value={filters.endDate} 
             onChange={(e) => handleFilterChange('endDate', e.target.value)} 
-            className="bg-zinc-900 border-zinc-800"
+            className="bg-background border-border"
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-zinc-400">Tipo</Label>
+          <Label className="text-muted-foreground">Tipo</Label>
           <Select value={filters.type} onValueChange={(val) => handleFilterChange('type', val)}>
-            <SelectTrigger className="bg-zinc-900 border-zinc-800">
+            <SelectTrigger className="bg-background border-border">
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
@@ -80,9 +86,9 @@ export function ReportFiltersComponent({ onFiltersChange, userId }: ReportFilter
           </Select>
         </div>
         <div className="space-y-2">
-          <Label className="text-zinc-400">Conta</Label>
+          <Label className="text-muted-foreground">Conta</Label>
           <Select value={filters.accountId} onValueChange={(val) => handleFilterChange('accountId', val)}>
-            <SelectTrigger className="bg-zinc-900 border-zinc-800">
+            <SelectTrigger className="bg-background border-border">
               <SelectValue placeholder="Todas as contas" />
             </SelectTrigger>
             <SelectContent>
@@ -94,9 +100,9 @@ export function ReportFiltersComponent({ onFiltersChange, userId }: ReportFilter
           </Select>
         </div>
         <div className="space-y-2">
-          <Label className="text-zinc-400">Categoria</Label>
+          <Label className="text-muted-foreground">Categoria</Label>
           <Select value={filters.categoryId} onValueChange={(val) => handleFilterChange('categoryId', val)}>
-            <SelectTrigger className="bg-zinc-900 border-zinc-800">
+            <SelectTrigger className="bg-background border-border">
               <SelectValue placeholder="Todas as categorias" />
             </SelectTrigger>
             <SelectContent>

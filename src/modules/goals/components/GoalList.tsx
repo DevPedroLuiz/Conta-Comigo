@@ -26,7 +26,7 @@ export function GoalList({ goals, onAddProgress }: GoalListProps) {
 
       {completed.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-sm font-medium text-emerald-500 uppercase tracking-wider">Metas Concluídas</h3>
+          <h3 className="text-sm font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Metas Concluídas</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 opacity-75">
             {completed.map(goal => (
               <GoalCard key={goal.id} goal={goal} />
@@ -37,7 +37,7 @@ export function GoalList({ goals, onAddProgress }: GoalListProps) {
 
       {cancelled.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider">Metas Canceladas</h3>
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Metas Canceladas</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 opacity-50">
             {cancelled.map(goal => (
               <GoalCard key={goal.id} goal={goal} />

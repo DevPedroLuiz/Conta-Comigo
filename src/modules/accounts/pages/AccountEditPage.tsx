@@ -69,7 +69,7 @@ export function AccountEditPage() {
         <p className="text-muted-foreground">Atualize as informações da sua conta financeira.</p>
       </div>
 
-      <div className="rounded-lg border border-zinc-800 bg-[#0c0c0e] p-6">
+      <div className="rounded-lg border border-border bg-card p-6">
         {initialData && (
           <AccountForm 
             initialData={initialData}

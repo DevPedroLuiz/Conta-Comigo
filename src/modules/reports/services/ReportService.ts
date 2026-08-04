@@ -92,7 +92,7 @@ export class ReportService {
         }
       };
     } catch (error: any) {
-      console.error('Error getting report data:', error);
+       
       return { error };
     }
   }

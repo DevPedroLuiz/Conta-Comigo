@@ -34,7 +34,7 @@ export function AccountCreatePage() {
         <p className="text-muted-foreground">Cadastre uma nova conta financeira para gerenciar seu dinheiro.</p>
       </div>
 
-      <div className="rounded-lg border border-zinc-800 bg-[#0c0c0e] p-6">
+      <div className="rounded-lg border border-border bg-card p-6">
         <AccountForm 
           onSubmit={handleSubmit} 
           isLoading={submitting} 

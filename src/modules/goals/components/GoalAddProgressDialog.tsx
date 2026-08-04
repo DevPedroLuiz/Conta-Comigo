@@ -37,10 +37,10 @@ export function GoalAddProgressDialog({ goal, isOpen, onClose, onSubmit, isLoadi
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md bg-[#0c0c0e] border-zinc-800 text-zinc-100">
+      <DialogContent className="sm:max-w-md bg-card border-border text-muted-foreground">
         <DialogHeader>
           <DialogTitle>Atualizar Progresso</DialogTitle>
-          <DialogDescription className="text-zinc-400">
+          <DialogDescription className="text-muted-foreground">
             Adicione um valor ao progresso da meta "{goal.name}".
           </DialogDescription>
         </DialogHeader>
@@ -49,11 +49,11 @@ export function GoalAddProgressDialog({ goal, isOpen, onClose, onSubmit, isLoadi
           <div className="space-y-2">
             <Label>Valor a adicionar</Label>
             <div className="relative">
-              <span className="absolute left-3 top-2.5 text-zinc-500">R$</span>
+              <span className="absolute left-3 top-2.5 text-muted-foreground">R$</span>
               <Input
                 type="number"
                 step="0.01"
-                className="pl-9 bg-zinc-900 border-zinc-800"
+                className="pl-9 bg-background border-border"
                 placeholder="0,00"
                 value={amount}
                 onChange={(e) => {
@@ -63,9 +63,9 @@ export function GoalAddProgressDialog({ goal, isOpen, onClose, onSubmit, isLoadi
                 autoFocus
               />
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && <p className="text-sm text-destructive dark:text-red-400">{error}</p>}
             {remaining > 0 && (
-              <p className="text-xs text-zinc-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Faltam R$ {remaining.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} para concluir.
               </p>
             )}

@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useForm, FormProvider, useFormContext } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigate } from "react-router-dom"
@@ -55,6 +55,22 @@ export function OnboardingPage() {
   })
 
   const { handleSubmit, trigger, formState: { isSubmitting } } = methods
+
+  useEffect(() => {
+    if (user?.userMetadata) {
+      const meta = user.userMetadata;
+      const metadataName = meta.full_name || meta.name || "";
+      const metadataAvatar = meta.avatar_url || meta.picture || "";
+
+      if (metadataName && !methods.getValues("fullName")) {
+        methods.setValue("fullName", metadataName, { shouldValidate: true });
+      }
+      
+      if (metadataAvatar && !methods.getValues("avatar")) {
+        methods.setValue("avatar", metadataAvatar, { shouldValidate: true });
+      }
+    }
+  }, [user, methods]);
 
   const nextStep = async () => {
     let fieldsToValidate: any = []
@@ -190,7 +206,7 @@ function SettingsStep() {
               <SelectItem value="EUR">Euro (€)</SelectItem>
             </SelectContent>
           </Select>
-          {errors.currency && <p className="text-sm text-destructive">{errors.currency.message}</p>}
+          {errors.currency && <p className="text-sm text-destructive dark:text-red-400">{errors.currency.message}</p>}
         </div>
 
         <div className="space-y-2">
@@ -207,7 +223,7 @@ function SettingsStep() {
               <SelectItem value="en-US">English (US)</SelectItem>
             </SelectContent>
           </Select>
-          {errors.language && <p className="text-sm text-destructive">{errors.language.message}</p>}
+          {errors.language && <p className="text-sm text-destructive dark:text-red-400">{errors.language.message}</p>}
         </div>
 
         <div className="space-y-2">
@@ -281,7 +297,7 @@ function ProfileStep() {
           placeholder="Ex: João da Silva" 
           {...register("fullName")} 
         />
-        {errors.fullName && <p className="text-sm text-destructive">{errors.fullName.message}</p>}
+        {errors.fullName && <p className="text-sm text-destructive dark:text-red-400">{errors.fullName.message}</p>}
       </div>
 
       <div className="space-y-2">
@@ -323,7 +339,7 @@ function AccountStep() {
           placeholder="Ex: Conta Corrente Itaú" 
           {...register("accountName")} 
         />
-        {errors.accountName && <p className="text-sm text-destructive">{errors.accountName.message}</p>}
+        {errors.accountName && <p className="text-sm text-destructive dark:text-red-400">{errors.accountName.message}</p>}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -354,7 +370,7 @@ function AccountStep() {
             placeholder="0.00"
             {...register("initialBalance", { valueAsNumber: true })} 
           />
-          {errors.initialBalance && <p className="text-sm text-destructive">{errors.initialBalance.message}</p>}
+          {errors.initialBalance && <p className="text-sm text-destructive dark:text-red-400">{errors.initialBalance.message}</p>}
         </div>
       </div>
     </div>
@@ -415,7 +431,7 @@ function FinishStep() {
   return (
     <div className="flex h-full flex-col items-center justify-center space-y-6 text-center animate-in fade-in slide-in-from-bottom-4">
       <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10">
-        <Check className="h-10 w-10 text-emerald-500" />
+        <Check className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
       </div>
       <div className="space-y-2">
         <h2 className="text-2xl font-bold tracking-tight">Tudo Pronto, {data.fullName.split(' ')[0]}!</h2>

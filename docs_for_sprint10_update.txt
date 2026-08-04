@@ -1,0 +1,475 @@
+# Roadmap do Projeto: Conta Comigo
+
+Este roadmap reflete as Sprints de desenvolvimento executadas e planejadas utilizando metodologias ágeis.
+
+## Concluído
+
+- **Sprint 1 — Autenticação:** Autenticação completa via Supabase, RLS, Guards de Rotas e UI Foundation.
+- **Sprint 2 — Onboarding e Configuração Inicial:** Fluxo multi-step, criação de perfil, moedas, preferências e setup inicial.
+- **Sprint 3 — Dashboard Financeiro:** Visão consolidada de caixa, gráficos base e resumo financeiro.
+- **Sprint 4 — Gestão de Transações:** CRUD de Receitas e Despesas, histórico e filtros.
+- **Sprint 5 — Gestão de Contas Financeiras:** CRUD de contas bancárias e carteiras, saldo consolidado.
+- **Sprint 6 — Categorias Financeiras Personalizadas:** Gestão de categorias por tipo (Receita/Despesa), padrões vs personalizadas.
+- **Sprint 7 — Metas Financeiras:** Criação de objetivos, rastreio de progresso e atualizações de status.
+- **Sprint 8 — Relatórios Financeiros:** Filtros avançados, visualizações de fluxo de caixa por período, exportação de dados (PDF/CSV).
+- **Sprint 9 — Assinaturas e Cartões de Crédito:** Cadastro de cartões de crédito, lançamentos recorrentes, controle de faturas e parcelamentos.
+- **Sprint 9.1 — Estabilização:** Correção do cálculo automático de faturas, implementação do pagamento de cartão, integração real entre assinaturas e transactions.
+
+## Próximos Passos (Planejado)
+
+- **Sprint 10 — Orçamentos (Budgets) e Calendário Financeiro:** Definição de limites de gastos por categoria e alertas visuais de estouro, e calendário.
+- **Sprint 11 — Investimentos:** Cadastro de carteiras, ativos (bolsa/renda fixa) e consolidação de rendimentos.
+- **Sprint 12 — Configurações Avançadas e PWA:** Exportação completa, LGPD, exclusão de conta, sincronização offline (preparação PWA/Mobile).
+# Backlog do Produto - Conta Comigo
+
+## 1. Visão Geral
+Este documento traduz toda a visão do produto (PRD, Arquitetura, Banco de Dados, API e Design) em itens acionáveis de trabalho. O Backlog é um artefato vivo, priorizado com base na entrega de valor contínuo e estruturado utilizando metodologias ágeis (Scrum/Kanban).
+
+**Critérios de Priorização (MoSCoW):**
+*   **Must Have (Obrigatório):** Itens essenciais para o MVP (Minimum Viable Product). Sem eles, o produto não funciona.
+*   **Should Have (Importante):** Itens de alto valor, mas que possuem *workarounds* temporários.
+*   **Could Have (Desejável):** Melhorias que aumentam o engajamento e a qualidade da experiência (Nice to have).
+*   **Won't Have (Não nesta versão):** Ideias valiosas, mas postergadas para versões futuras (V2).
+
+---
+
+## 2. Épicos e Features
+
+Abaixo está o detalhamento dos Épicos do sistema.
+
+### Épico 1: Autenticação e Segurança
+*   **Feature 1.1:** Login / Cadastro via E-mail e Senha.
+*   **Feature 1.2:** Login Social (Google).
+*   **Feature 1.3:** Recuperação de Senha.
+
+### Épico 2: Estrutura Base (Contas e Categorias)
+*   **Feature 2.1:** Gestão de Contas Bancárias.
+*   **Feature 2.2:** Gestão de Categorias (Receitas/Despesas).
+
+### Épico 3: Motor Financeiro (Transações)
+*   **Feature 3.1:** Lançamento de Despesas e Receitas Simples.
+*   **Feature 3.2:** Lançamentos Recorrentes e Parcelados.
+*   **Feature 3.3:** Transferências entre Contas.
+
+### Épico 4: Cartões de Crédito [DONE]
+*   **Feature 4.1:** Cadastro e Gestão de Cartões. (Concluído)
+*   **Feature 4.2:** Faturas e Pagamento de Faturas. (Concluído)
+*   **Feature 4.3:** Compras no crédito e parcelamentos. (Concluído)
+*   *Nota:* Motor de recorrências automáticas via Cron/Edge Function permanece como melhoria futura.
+
+### Épico 5: Dashboard e Relatórios
+*   **Feature 5.1:** Dashboard Consolidado (Saldos e Gráfico Base).
+*   **Feature 5.2:** Relatórios Mensais e Exportação (PDF/CSV).
+
+### Épico 6: Inteligência e Planejamento
+*   **Feature 6.1:** Objetivos Financeiros (Metas).
+*   **Feature 6.2:** Orçamentos por Categoria.
+
+### Épico 7: Investimentos
+*   **Feature 7.1:** Carteira de Ativos.
+*   **Feature 7.2:** Proventos e Rentabilidade.
+
+### Épico 8: Configurações e Perfil
+*   **Feature 8.1:** Customização de Perfil (Tema, Moeda).
+*   **Feature 8.2:** LGPD e Deleção de Dados.
+
+---
+
+## 3. Histórias de Usuário, Critérios de Aceite e Estimativas
+
+Abaixo está a decomposição das principais Features em Histórias de Usuário (US). 
+*As estimativas (Pontos) utilizam a sequência de Fibonacci (1, 2, 3, 5, 8, 13).*
+
+### Épico 1: Autenticação
+**US-01: Cadastro via E-mail**
+*   *Como* usuário recém-chegado
+*   *Quero* me cadastrar utilizando meu e-mail e uma senha forte
+*   *Para* criar meu espaço seguro de gestão financeira.
+*   **Critérios de Aceite:** Validar e-mail, senha mínima de 8 caracteres; Enviar e-mail de confirmação (Supabase Auth); Criar registro na tabela `profiles` via Trigger.
+*   **Prioridade:** Must Have
+*   **Estimativa:** 5 Pontos
+
+**US-02: Login Social (Google)**
+*   *Como* usuário frequente
+*   *Quero* fazer login com apenas um clique via Google
+*   *Para* acessar minha conta rapidamente sem lembrar senhas.
+*   **Critérios de Aceite:** Integração OAuth Google configurada no Supabase; Redirecionamento correto após sucesso.
+*   **Prioridade:** Should Have
+*   **Estimativa:** 3 Pontos
+
+### Épico 2: Estrutura Base
+**US-03: Cadastro de Conta Bancária**
+*   *Como* usuário do sistema
+*   *Quero* cadastrar minhas contas bancárias informando o saldo inicial
+*   *Para* refletir fielmente meu dinheiro em diferentes instituições.
+*   **Critérios de Aceite:** Campos obrigatórios: Nome, Tipo, Saldo; Bloquear cadastro duplicado com mesmo nome; Gravar no Supabase (RLS protegido).
+*   **Prioridade:** Must Have
+*   **Estimativa:** 5 Pontos
+
+### Épico 3: Motor Financeiro
+**US-04: Adicionar Despesa Simples**
+*   *Como* usuário do sistema
+*   *Quero* registrar um gasto (Despesa)
+*   *Para* que o valor seja abatido do meu saldo atual.
+*   **Critérios de Aceite:** Input de valor "tipo calculadora"; Selecionar conta e categoria; Deduzir imediatamente do saldo no cache local (Optimistic Update).
+*   **Dependência:** Requer US-03 (Contas) concluída.
+*   **Prioridade:** Must Have
+*   **Estimativa:** 8 Pontos
+
+**US-05: Adicionar Compra Parcelada**
+*   *Como* usuário do sistema
+*   *Quero* registrar uma compra no cartão dividida em várias vezes
+*   *Para* que o sistema projete automaticamente as faturas dos próximos meses.
+*   **Critérios de Aceite:** Informar número de parcelas; Gerar registros atrelados à `transaction_installments`; Distribuição do valor entre os meses seguintes.
+*   **Prioridade:** Should Have
+*   **Estimativa:** 13 Pontos (Alta Complexidade)
+
+### Épico 5: Dashboard e Relatórios
+**US-06: Visão Geral de Saldos**
+*   *Como* usuário do sistema
+*   *Quero* ver meu saldo total e saldo de investimentos na tela principal
+*   *Para* ter ciência imediata da minha capacidade financeira diária.
+*   **Critérios de Aceite:** Soma correta de todas as contas do tipo CHECKING/CASH; Atualização em tempo real via Supabase Subscriptions.
+*   **Prioridade:** Must Have
+*   **Estimativa:** 5 Pontos
+
+---
+
+# Documentação de Arquitetura de Banco de Dados - Conta Comigo
+
+## 1. Filosofia do Banco
+
+A modelagem do banco de dados do **Conta Comigo** foi desenhada para suportar uma aplicação financeira crítica, garantindo consistência absoluta dos dados, performance em escala e sincronização offline-first. As premissas filosóficas são:
+
+*   **Normalização (3NF):** O núcleo transacional é estritamente normalizado para garantir integridade e evitar anomalias de atualização. Dados analíticos (dashboards) podem usar desnormalização através de Materialized Views no futuro.
+*   **Performance:** Consultas rápidas são garantidas pelo uso estratégico de índices (B-Tree em FKs e datas) e particionamento projetado para o longo prazo.
+*   **Escalabilidade:** O banco é preparado para crescer de um único usuário para um modelo SaaS multi-tenant massivo, utilizando `user_id` em quase todas as tabelas para facilitar futuro sharding ou particionamento.
+*   **Segurança (Zero Trust):** Acesso direto aos dados é bloqueado por padrão. Row Level Security (RLS) é a lei. Cada query obrigatoriamente valida a identidade via JWT.
+*   **Auditoria:** Toda ação destrutiva ou mutação sensível é rastreada de forma imutável.
+*   **Soft Delete:** Registros financeiros nunca são fisicamente deletados para preservar o histórico. Ocultamos logicamente via `deleted_at`.
+*   **Versionamento (Sincronização):** Controle rigoroso de concorrência com timestamps (`updated_at`) para suportar a arquitetura offline-first e conciliação de conflitos.
+
+---
+
+## 2. Diagrama ER (Lógico e Textual)
+
+```text
+auth.users (Supabase Auth)
+ ├── profiles
+ │    ├── settings
+ │    └── currencies (Preferência do usuário)
+ │
+ ├── accounts (Contas Bancárias)
+ │    ├── account_types
+ │    ├── transactions (Receitas/Despesas Base)
+ │    │    ├── attachments
+ │    │    └── audit_logs
+ │    └── transfers (Envolve 2 accounts)
+ │
+ ├── categories (Categorias Customizadas)
+ │
+ ├── credit_cards
+ │    └── credit_card_invoices (Faturas)
+ │         └── invoice_payments
+ │
+ ├── transations_logic (Motores de Repetição)
+ │    ├── transaction_recurrences (Assinaturas/Fixas)
+ │    └── transaction_installments (Parcelamentos)
+ │
+ ├── investments (Carteiras)
+ │    ├── investment_assets (Ativos)
+ │    ├── investment_movements (Compra/Venda)
+ │    └── dividends (Proventos)
+ │
+ ├── goals (Objetivos Financeiros)
+ │    └── goal_transactions (Aportes/Resgates)
+ │
+ ├── budgets (Orçamentos Mensais)
+ │
+ ├── loans (Empréstimos)
+ │    └── loan_installments (Amortizações)
+ │
+ ├── subscriptions (Gestão Visual de Assinaturas)
+ │
+ └── notifications (Push e Lembretes)
+```
+
+---
+
+## 3. Entidades
+
+Abaixo detalhamos a estrutura lógica de todas as entidades do sistema.
+
+### 3.1. Núcleo de Usuários
+*   **users:** Tabela gerenciada pelo Supabase Auth (`auth.users`). Armazena credenciais, e-mail e hash de senhas.
+*   **profiles:** Extensão pública do usuário. Responsabilidade: Dados demográficos. Obrigatórios: `id` (FK auth.users), `first_name`. Opcionais: `last_name`, `avatar_url`.
+*   **settings:** Preferências do app. Obrigatórios: `user_id`, `theme`, `language`, `timezone`.
+*   **currencies:** Dicionário de moedas disponíveis para conversão.
+
+### 3.2. Contas e Categorias
+*   **accounts:** Contas físicas/digitais. Responsabilidade: Saldo direto. Obrigatórios: `id`, `user_id`, `name`, `type_id`, `initial_balance`. Opcionais: `color`, `icon`, `bank_name`. Calculados: `current_balance`.
+*   **account_types:** Tipos de conta (Corrente, Poupança, Carteira). Domínio estático.
+*   **categories:** Categorias de classificação financeira. Obrigatórios: `id`, `user_id`, `name`, `type` (INCOME/EXPENSE). Opcionais: `color`, `icon`, `parent_category_id`.
+
+### 3.3. Transações e Cartões
+*   **transactions:** Coração do sistema. Lançamentos pontuais. Obrigatórios: `id`, `user_id`, `account_id` (ou `credit_card_id`), `category_id`, `type`, `amount`, `date`, `status` (PAID/UNPAID). Opcionais: `description`, `tags`, `recurrence_id`, `installment_id`.
+*   **transaction_installments:** Agrupador de compras parceladas. Contém o valor total e o número de parcelas. As parcelas individuais vão para `transactions`.
+*   **transaction_recurrences:** Agrupador de lançamentos fixos (mensais/anuais). Usado para projetar transações futuras.
+*   **transfers:** Entidade relacional para transferências. Obrigatórios: `id`, `user_id`, `origin_transaction_id` (saída), `destination_transaction_id` (entrada).
+*   **credit_cards:** Cartões do usuário. Obrigatórios: `id`, `user_id`, `name`, `limit`, `closing_day`, `due_day`. Opcionais: `brand`, `color`.
+*   **credit_card_invoices:** Faturas geradas. Obrigatórios: `id`, `credit_card_id`, `month`, `year`. Calculados: `total_amount`.
+*   **invoice_payments:** Pagamentos de faturas. Relaciona uma `credit_card_invoice` a uma `transaction` (saída da conta corrente).
+
+### 3.4. Planejamento Financeiro
+*   **budgets:** Orçamentos definidos pelo usuário. Obrigatórios: `id`, `user_id`, `category_id`, `month`, `year`, `limit_amount`. Calculados: `spent_amount`.
+*   **goals:** Objetivos (ex: Viagem). Obrigatórios: `id`, `user_id`, `name`, `target_amount`, `target_date`.
+*   **goal_transactions:** Aportes para os objetivos. Obrigatórios: `id`, `goal_id`, `amount`, `date`, `transaction_id` (se debitou de uma conta).
+*   **subscriptions:** Espelho visual de `transaction_recurrences` focado em assinaturas (Netflix, Academia), adicionando metadata como site e plano.
+
+### 3.5. Investimentos e Empréstimos
+*   **investments:** Carteiras/Corretoras. Obrigatórios: `id`, `user_id`, `name`.
+*   **investment_assets:** Ativos individuais (PETR4, Tesouro Direto). Obrigatórios: `id`, `user_id`, `investment_id`, `ticker_or_name`, `asset_type`.
+*   **investment_movements:** Compras e vendas. Obrigatórios: `id`, `asset_id`, `type` (BUY/SELL), `quantity`, `unit_price`, `date`.
+*   **dividends:** Proventos recebidos. Obrigatórios: `id`, `asset_id`, `amount`, `date`.
+*   **loans:** Empréstimos tomados ou concedidos. Obrigatórios: `id`, `user_id`, `name`, `principal_amount`, `interest_rate`.
+*   **loan_installments:** Amortizações do empréstimo.
+
+### 3.6. Sistema
+*   **notifications:** Alertas para o usuário. Obrigatórios: `id`, `user_id`, `title`, `body`, `read_status`.
+*   **attachments:** Comprovantes em PDF/Imagens. Obrigatórios: `id`, `user_id`, `transaction_id`, `storage_path`, `file_type`.
+*   **audit_logs:** Rastreio de ações. Obrigatórios: `id`, `user_id`, `action` (CREATE/UPDATE/DELETE), `table_name`, `record_id`, `old_data` (JSONB), `new_data` (JSONB).
+
+---
+
+## 4. Relacionamentos
+
+*   **1:1 (Um-para-Um):** `auth.users` <-> `profiles`. `profiles` <-> `settings`. Um usuário tem exatamente um perfil e uma configuração.
+*   **1:N (Um-para-Muitos):** `users` -> `accounts` (Um usuário possui várias contas). `accounts` -> `transactions`. `credit_cards` -> `transactions`.
+*   **N:N (Muitos-para-Muitos):** A ser implementado futuramente para *Tags* (`transactions_tags`), permitindo que uma transação tenha múltiplas tags, e uma tag pertença a várias transações.
+*   **Cascade:** Quando um `user` é deletado (hard delete), o Cascade deleta todo o banco daquele usuário para cumprir a LGPD.
+*   **Restrict:** Proibido deletar uma `account` ou `category` se existirem `transactions` vinculadas a ela. O usuário deve primeiro remanejar as transações ou usar inativação (Soft Delete).
+
+---
+
+## 5. Índices
+
+A alta performance será garantida pela criação cirúrgica de índices:
+*   **Índices B-Tree (Chaves Estrangeiras):** Todos os `user_id` e IDs de relacionamento (`account_id`, `category_id`) terão índices para garantir Joins ultra-rápidos e acelerar o RLS.
+*   **Índices de Data (BRIN ou B-Tree):** A coluna `date` em `transactions` receberá índice para viabilizar agrupamentos rápidos por mês (Dashboard).
+*   **Índices Compostos:** Índices como `(user_id, date)` ou `(credit_card_id, status)` para otimizar as queries exatas dos relatórios do aplicativo e telas de faturas.
+
+---
+
+## 6. Integridade
+
+*   **Foreign Keys (FKs):** Fortemente amarradas para garantir que não existam registros órfãos.
+*   **Unique Constraints:** Imposição de regras únicas lógicas. Exemplo: `(user_id, category_name)` garante que o usuário não cadastre duas categorias com o exato mesmo nome.
+*   **Checks:** Constraints a nível de banco. Exemplo: `CHECK (amount > 0)` em transações. `CHECK (type IN ('INCOME', 'EXPENSE'))`.
+*   **Triggers de Manutenção:** Triggers de atualização automática de `updated_at`.
+
+---
+
+## 7. Histórico e Retenção
+
+*   **Soft Delete:** O uso da coluna `deleted_at` anula a exibição dos registros em queries regulares (todas as views e queries do app usarão `where deleted_at is null`).
+*   **Audit Logs:** Implementados via PostgreSQL Triggers (usando `JSONB` para capturar o "antes" e "depois" do registro) para tabelas financeiras core (Accounts e Transactions).
+*   **Versionamento:** O uso da coluna `version` (int incrementado a cada update) ou `updated_at` (timestamp precisão milissegundos) garante controle de concorrência.
+
+---
+
+## 8. Segurança
+
+*   **RLS (Row Level Security):** O Supabase não retornará dados sem autenticação.
+*   **Policies:** Todas as tabelas têm a seguinte policy primária: `(auth.uid() = user_id)`. Para tabelas derivadas, usa-se subqueries de verificação ou FKs diretas.
+*   **Permissões:** O banco não expõe permissões `DELETE` físicas para o client side (RPC ou APIs limitadas cuidarão do Soft Delete via `UPDATE`).
+*   **Isolamento:** A quebra de isolamento multitenant é impossível a nível estrutural no PostgreSQL caso o RLS seja aplicado corretamente.
+
+---
+
+## 9. Estratégia de IDs
+
+**Escolha: UUIDv4**
+*   **Motivo Principal:** Suporte à **Sincronização Offline**. O aplicativo Android (React Native) precisa criar e gravar transações localmente no SQLite enquanto o usuário está em modo avião (sem rede). Com UUIDv4, o celular gera o ID final imediatamente, exibe na UI e manda para o Supabase depois, garantindo 0% de chance de colisão de ID no banco central. (IDs Sequenciais/Integer impossibilitam isso sem conciliação complexa).
+
+---
+
+## 10. Estratégia de Datas
+
+*   **Timestamps:** O formato oficial é `TIMESTAMPTZ` (Timestamp with Time Zone), armazenado em UTC no banco. O cliente (Next.js/React Native) formata para o fuso horário local.
+*   **`created_at`:** Imutável, default `now()`.
+*   **`updated_at`:** Atualizado por trigger sempre que a linha for modificada. Essencial para reconciliação.
+*   **`deleted_at`:** Preenchido para inativação (Soft Delete).
+*   **`last_sync`:** (Aplicável primariamente no Client SQLite) Define quando o dado local foi confirmado pelo servidor.
+
+---
+
+## 11. Estratégia Financeira
+
+*   **Transferências:** Uma tela de transferência cria 1 registro na tabela `transfers` e 2 registros na tabela `transactions` (uma despesa na conta origem, uma receita na conta destino).
+*   **Credit Card Invoice Flow:**
+    *   `credit_card_invoices` representa o agrupamento mensal das compras.
+    *   O cálculo ocorre através das transactions associadas ao `credit_card_id`.
+    *   O fechamento considera `closing_day` do cartão.
+    *   Pagamentos são registrados através da tabela `invoice_payments`.
+    *   O pagamento de fatura gera uma transaction de despesa na conta bancária vinculada ao `invoice_payments` para abater a dívida.
+*   **Parcelamentos:** Uma compra parcelada gera o registro pai `transaction_installments` (Ex: R$ 1.200) e o frontend/backend gera imediatamente N (ex: 12) transações filhas de R$ 100 com datas futuras atreladas.
+*   **Recorrências e Assinaturas (`transaction_recurrences`):** Responsável por armazenar regras de recorrência (mensais/anuais). Usado em assinaturas (`subscriptions`) para projetar ou gerar transações futuras de forma automática (através de Cron Jobs / Edge Functions).
+
+---
+
+## 12. Sincronização e Conectividade
+
+*   **Realtime:** O Supabase enviará payloads WebSocket para os clientes toda vez que houver `INSERT/UPDATE/DELETE` nas tabelas que o usuário assina.
+*   **Offline-First & Conflitos:** O mobile utiliza banco local (ex: WatermelonDB) com uma coluna `updated_at`.
+*   **Reconciliação Incremental (Last Write Wins):** Se houver conflito (duas edições no mesmo registro offline), o banco acatará o `updated_at` mais recente cronologicamente.
+
+---
+
+## 13. Escalabilidade
+
+*   **Até 100 usuários:** Banco padrão compartilhado (Tier Free do Supabase).
+*   **Até 10 mil usuários:** Migração para instâncias dedicadas. Criação de índices otimizados pós-análise de lentidão em `pg_stat_statements`.
+*   **Até 100 mil usuários:** Habilitação do **Supavisor** (Connection Poolinger nativo do Supabase) para suportar milhares de requisições de API simultâneas. Habilitação de Read Replicas se os relatórios (OLAP) pesarem na base transacional (OLTP).
+*   **Até 1 milhão de usuários:** Particionamento nativo do PostgreSQL nas tabelas `transactions` e `audit_logs` (Partição por Range de `date` ou Hash de `user_id`).
+
+---
+
+## 14. Roadmap do Banco
+
+**Fase 1: Identidade e Infraestrutura (Fundação)**
+*   Schema Auth, Profiles, Configurações, Segurança RLS base.
+**Fase 2: Core Bancário (MVP Financeiro)**
+*   Accounts, Account Types, Categories, Transactions (Simples), Transfers.
+**Fase 3: Expansão de Crédito (Endividamento)**
+*   Credit Cards, Invoices, Parcelamentos (Installments).
+**Fase 4: Inteligência Artificial e Previsibilidade**
+*   Budgets, Goals, Subscriptions (Recorrência via Cron).
+**Fase 5: Patrimônio (Ecossistema Fechado)**
+*   Investments, Dividends, Loans.
+**Fase 6: Prontidão Corporativa (Enterprise Grade)**
+*   Audit Logs em JSONB, View Materializadas, Particionamento de Histórico.
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- **Sprint 9.1:** Estabilização Financeira.
+- Correção do cálculo automático de faturas baseado no dia de fechamento e transações.
+- Implementação do fluxo de pagamento de fatura gerando débito em conta bancária e registro na tabela `invoice_payments`.
+- Integração real do fluxo de assinaturas, gerando `transaction_recurrences` e transações associadas.
+- **Sprint 9:** Cartões de Crédito, Faturas, Parcelamentos, Recorrências e Assinaturas.
+- Módulo `credit-cards` contendo CRUD para gestão de cartões de crédito (Nome, Limite, Dia de Vencimento, Dia de Fechamento).
+- Faturas dinâmicas renderizadas em `/credit-cards/:id/invoices`.
+- Criação e edição de transações suportando seleção da fonte de pagamento (`account_id` ou `credit_card_id`).
+- Criação de transações suportando compras parceladas (`installments_count`).
+- Assinaturas e gerencialmente de recorrências (`subscriptions`).
+- Débito Técnico: A execução e geração automática das faturas e transações mensais por Cron Job / Edge Function foi registrada como melhoria futura. Melhorias futuras também se aplicam para categorias financeiras.
+- **Sprint 8:** Relatórios Financeiros.
+- Módulo `reports` criado com `ReportService`, `ReportRepository`, e `Types` para consolidar o fluxo de caixa.
+- `ReportsPage`: Página dedicada a relatórios financeiros avançados.
+- Filtros dinâmicos (`ReportFiltersComponent`) por período (Data Inicial/Final), Tipo (Receita/Despesa), Conta e Categoria.
+- Visualização de fluxo de caixa em gráfico de área preenchida (`CashFlowChart`).
+- Distribuição percentual em gráficos de rosca para Receitas e Despesas (`CategoryBreakdownChart`).
+- Funcionalidade de exportação em lote para formato CSV utilizando `papaparse`.
+- Funcionalidade de exportação em PDF utilizando `jspdf` e `jspdf-autotable`.
+- Atualização do `MainLayout` para incluir link de navegação da página de Relatórios.
+- Testes unitários para regras de cálculo do `ReportService`.
+- **Sprint 7:** Metas Financeiras.
+- Migration `goals` criada (`supabase/migrations/20260803140000_create_goals.sql`) com Constraints e Políticas RLS.
+- CRUD de Metas no módulo `goals` (GoalService, GoalRepository, Schema e Types).
+- Páginas e componentes para gestão de metas:
+  - Componente de lista e cards (`GoalList`, `GoalCard`).
+  - Formulário para criação/edição (`GoalForm`).
+  - Progress bar (`GoalProgress`).
+  - Lógica para adicionar progresso (`GoalAddProgressDialog`).
+- Fechamento automático de status para `completed` quando a meta é alcançada.
+- Integração da métrica de metas ativas e resumo de progresso ao painel do `DashboardPage`.
+- Proteção RLS garantindo que metas pertençam apenas aos seus usuários.
+- Testes unitários para `GoalService` incluindo cálculo de progresso e regras de negócio.
+- **Sprint 6:** Gestão de Categorias Financeiras.
+- Migration `categories` atualizada (`supabase/migrations/20260803130000_categories_update.sql`) com Constraints, Índices e RLS.
+- CRUD de Categorias Personalizadas no módulo `categories` com Zod e React Hook Form.
+- Adicionado tipo de categoria para suportar "Receita" (INCOME) e "Despesa" (EXPENSE).
+- Adicionado campo `is_default` para categorias pré-existentes.
+- Componentes visuais para exibição de categorias separadas por tipo (`CategoryList`, `CategoryCard`).
+- Testes unitários para `CategoryService` garantindo restrições de edição de categorias padrão.
+- **Sprint 5:** Gestão de Contas Financeiras.
+- Migration `accounts` atualizada (`supabase/migrations/20260803121500_accounts_update.sql`) com Constraints, Índices e RLS (Segurança por usuário).
+- CRUD de Contas no módulo `accounts` com React Hook Form e Zod.
+- Componentes visuais para listar contas, visualizar Patrimônio Total (`AccountSummary`) e gerenciar formulários.
+- Integração do card "Patrimônio Total" atualizado no Dashboard.
+- `AccountService` e `AccountRepository` implementando regras de negócio e camada de acesso.
+- Testes unitários para `AccountService` garantindo regras e cálculos de saldo.
+- **Sprint 4:** Gestão de Transações.
+- Migration `transactions` criada (`supabase/migrations/20260803120000_create_transactions.sql`) com Constraints, Foreign Keys e Índices apropriados.
+- RLS configurado e Segurança por usuário implementada (SELECT, INSERT, UPDATE, DELETE atrelados ao auth.uid()).
+- `TransactionsPage`: Listagem de transações com filtros por tipo, período e categoria, além de tabela contendo histórico e ações.
+- `TransactionCreatePage` e `TransactionEditPage`: Páginas utilizando `TransactionForm` para operações de CRUD de transações financeiras.
+- Validação no frontend utilizando Zod (`transactionSchema`) com restrições rigorosas (valor positivo obrigatório).
+- `TransactionRepository`: Padrão de acesso a dados integrado com Supabase contendo RLS policies, limitando o usuário a ver/gerenciar apenas suas movimentações.
+- `TransactionService`: Centralização das regras de negócios com validações antes da persistência de receitas e despesas.
+- Integração do roteamento `/transactions`, `/transactions/new` e `/transactions/:id/edit` acoplado ao `MainLayout` e `OnboardingGuard`.
+- Testes unitários para regras de negócios do serviço de transações (`TransactionService.test.ts`).
+- **Sprint 3:** Dashboard Financeiro.
+- `DashboardPage`: Página principal exibindo visão geral financeira.
+- Resumo financeiro com componentes `BalanceCard`, `IncomeCard` e `ExpenseCard`.
+- Exibição de transações recentes através do componente `RecentTransactions`.
+- Gráfico de distribuição de despesas por categoria via `ExpenseChart` utilizando `recharts`.
+- Integração de `DashboardRepository` focado na conexão Supabase para sumarização de gastos e despesas e `DashboardService` para regras de negócios.
+- Testes unitários para regras de negócio do Dashboard (`DashboardService.test.ts`).
+- Atualização do `MainLayout` para suportar sidebar e topbar com navegação ativa e avatar do usuário logado.
+- Inclusão do `OnboardingGuard` no pipeline de roteamento (`router.tsx`) assegurando que usuários passem pelo setup antes de acessar o Dashboard.
+- **Sprint 2:** Onboarding e Configuração Inicial.
+- Fluxo de `OnboardingPage` utilizando um formulário multi-step (`react-hook-form` + `zod`).
+- Tela de boas-vindas com botão "Começar".
+- Configuração Inicial (Moeda, Idioma, Formato de Data, Primeiro dia, Tema).
+- Perfil Inicial (Nome, Foto, Fuso Horário).
+- Conta Financeira Inicial (Nome, Tipo, Saldo).
+- Categorias Padrão listadas por padrão.
+- Integração de UI via `components.json` e Radix/Shadcn (Select, Input, Card, Badge, etc).
+- `OnboardingService` e `OnboardingRepository` utilizando o padrão Repository Pattern.
+- Testes unitários para regras de negócio do Onboarding (`OnboardingService.test.ts`).
+- **Sprint 1D:** Authentication Screens.
+- Telas de Autenticação utilizando os componentes criados na Sprint 1C.
+- `LoginPage`: Formulário de login, exibir/ocultar senha, remember me.
+- `RegisterPage`: Formulário de cadastro com nome, e-mail, senhas, e checkbox de termos.
+- `ForgotPasswordPage`: Recuperação de senha com estado de sucesso inline.
+- `ResetPasswordPage`: Tela para definir nova senha.
+- `VerifyEmailPage`: Tela estática de feedback instruindo o usuário a verificar o e-mail.
+- Integração total de todas as telas com `react-hook-form` e zod schemas estendidos.
+- Fluxos integrados com `AuthService` e exibição de erro/sucesso via `sonner` (Toast) e `Alert`.
+- Atualização do `router.tsx` roteando a árvore `/` para as novas páginas.
+- **Sprint 1C:** Foundation UI.
+- Implementação de todos os componentes base visuais da aplicação em `src/core/ui/components`.
+- Componentes interativos baseados em Radix UI: `Avatar`, `Checkbox`, `Dialog`, `DropdownMenu`, `RadioGroup`, `Select`, `Switch`, `Tooltip`.
+- Componentes de layout e estrutura: `Card`, `Separator`, `Drawer` (via Vaul).
+- Elementos de formulário: `Button`, `Input`, `Label`, `Textarea`.
+- Elementos de tipografia e display: `Typography`, `Badge`, `Spinner`, `Skeleton`.
+- Componentes de Feedback Visual: `Alert`, `EmptyState`, `ErrorState`, `SuccessState`, `Toast` (via Sonner).
+- Layouts de página estruturados: `Container`, `PageLayout`, `ContentLayout` em `src/core/ui/layout`.
+- Todos os componentes possuem suporte a tema claro/escuro, responsividade, variantes dinâmicas via `cva` e acessibilidade seguindo WCAG.
+- **Sprint 1B:** Infraestrutura de Autenticação completa.
+- Schemas Zod robustos (`LoginDTO`, `SignupDTO`, `ResetPasswordDTO`, `UpdatePasswordDTO`) em `src/core/utils/schemas/auth.schemas.ts`.
+- Repositório base de acesso ao banco (`AuthRepository`) e Serviço lógico com tratamento de erros (`AuthService`).
+- Hooks customizados reativos para a UI: `useAuth`, `useSession`, `useUser`.
+- `AuthProvider` reescrito para persistência e sincronização de sessão cross-tab com `authState` explícito (Loading, Offline, ExpiredSession, etc).
+- Guardas de Rota: `AuthGuard` para páginas privadas e `GuestGuard` para públicas.
+- Implementação dos testes unitários para Services, Hooks e Validações Zod (Vitest pattern).
+- Separação forte da arquitetura entre Domínio, Repositório e View (Clean Architecture).
+
+- **Sprint 1A:** Configuração inicial da arquitetura do projeto.
+- Estrutura de pastas Monorepo simulado (`/src/modules`, `/src/core`, `/src/app`).
+- Cliente do Supabase (`/src/core/services/supabase.ts`).
+- React Context Providers (`AppProvider`, `AuthProvider`, `ThemeProvider`).
+- Configurações do ambiente (`.env.example`).
+- Layouts base (`MainLayout`, `AuthLayout`).
+- Configurações de Linting e Code Quality (`eslint.config.js`, `.prettierrc`, `commitlint.config.js`, Husky dependencies).
+- Instalação e base estrutural para Shadcn UI (`components.json`, `index.css` Tailwind variables, `utils/index.ts`).
+- Estrutura base de rotas via React Router.
+- Utilitários Zod + React Hook Form base (`schemas.ts` removido em 1B e migrado para escopos locais).
+

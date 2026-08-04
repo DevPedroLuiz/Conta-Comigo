@@ -100,7 +100,7 @@ export function ResetPasswordPage() {
                 </Button>
               </div>
               {errors.password && (
-                <p className="text-sm text-destructive">{errors.password.message}</p>
+                <p className="text-sm text-destructive dark:text-red-400">{errors.password.message}</p>
               )}
             </div>
 
@@ -129,7 +129,7 @@ export function ResetPasswordPage() {
                 </Button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+                <p className="text-sm text-destructive dark:text-red-400">{errors.confirmPassword.message}</p>
               )}
             </div>
             

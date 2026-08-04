@@ -43,7 +43,7 @@ export function CategoryForm({ initialData, onSubmit, isLoading }: CategoryFormP
           placeholder="Ex: Alimentação, Transporte..."
           {...register('name')}
         />
-        {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+        {errors.name && <p className="text-sm text-destructive dark:text-red-400">{errors.name.message}</p>}
       </div>
 
       <div className="space-y-2">
@@ -60,7 +60,7 @@ export function CategoryForm({ initialData, onSubmit, isLoading }: CategoryFormP
             <SelectItem value="INCOME">Receita</SelectItem>
           </SelectContent>
         </Select>
-        {errors.type && <p className="text-sm text-destructive">{errors.type.message}</p>}
+        {errors.type && <p className="text-sm text-destructive dark:text-red-400">{errors.type.message}</p>}
       </div>
 
       <div className="space-y-3">
@@ -73,8 +73,8 @@ export function CategoryForm({ initialData, onSubmit, isLoading }: CategoryFormP
               onClick={() => setValue('icon', icon)}
               className={`flex h-10 w-10 items-center justify-center rounded-md border ${
                 selectedIcon === icon 
-                  ? 'border-emerald-500 bg-emerald-500/10 text-emerald-500' 
-                  : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:bg-zinc-800'
+                  ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                  : 'border-border bg-background text-muted-foreground hover:bg-card'
               }`}
             >
               {getCategoryIcon(icon)}

@@ -16,6 +16,7 @@ export function useAuth() {
     
     // Auth actions
     login: authService.login,
+    loginWithGoogle: authService.loginWithGoogle,
     signup: authService.signup,
     logout: authService.logout,
     resetPassword: authService.resetPassword,

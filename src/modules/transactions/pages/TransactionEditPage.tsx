@@ -17,6 +17,7 @@ export function TransactionEditPage() {
   const [initialData, setInitialData] = useState<TransactionFormData | null>(null);
   const [accounts, setAccounts] = useState<{ id: string; name: string }[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string; type: string }[]>([]);
+  const [creditCards, setCreditCards] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     async function loadData() {
@@ -33,15 +34,19 @@ export function TransactionEditPage() {
       } else if (refs && tx) {
         setAccounts(refs.accounts || []);
         setCategories(refs.categories || []);
+        setCreditCards(refs.creditCards || []);
         
         setInitialData({
           type: tx.type,
           amount: tx.amount,
           description: tx.description,
           date: tx.date,
-          account_id: tx.account_id,
-          category_id: tx.category_id,
+          account_id: tx.account_id || undefined,
+          category_id: tx.category_id || undefined,
+          credit_card_id: tx.credit_card_id || undefined,
           notes: tx.notes || '',
+          status: tx.status,
+          installments: 1, // To avoid issues when editing
         });
       }
       setLoading(false);
@@ -81,12 +86,13 @@ export function TransactionEditPage() {
         <p className="text-muted-foreground">Atualize os detalhes da sua movimentação financeira.</p>
       </div>
 
-      <div className="rounded-lg border border-zinc-800 bg-[#0c0c0e] p-6">
+      <div className="rounded-lg border border-border bg-card p-6">
         {initialData && (
           <TransactionForm 
             initialData={initialData}
             accounts={accounts} 
-            categories={categories} 
+            categories={categories}
+            creditCards={creditCards}
             onSubmit={handleSubmit} 
             isLoading={submitting} 
           />

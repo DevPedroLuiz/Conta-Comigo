@@ -65,8 +65,8 @@ Abaixo detalhamos a estrutura lógica de todas as entidades do sistema.
 
 ### 3.1. Núcleo de Usuários
 *   **users:** Tabela gerenciada pelo Supabase Auth (`auth.users`). Armazena credenciais, e-mail e hash de senhas.
-*   **profiles:** Extensão pública do usuário. Responsabilidade: Dados demográficos. Obrigatórios: `id` (FK auth.users), `first_name`. Opcionais: `last_name`, `avatar_url`.
-*   **settings:** Preferências do app. Obrigatórios: `user_id`, `theme`, `language`, `timezone`.
+*   **profiles:** Extensão pública do usuário. Responsabilidade: Dados demográficos. Obrigatórios: `id` (FK auth.users), `full_name`. Opcionais: `avatar_url`, `timezone`.
+*   **settings:** Preferências do app. Obrigatórios: `user_id`, `theme`, `language`.
 *   **currencies:** Dicionário de moedas disponíveis para conversão.
 
 ### 3.2. Contas e Categorias
@@ -84,7 +84,7 @@ Abaixo detalhamos a estrutura lógica de todas as entidades do sistema.
 *   **invoice_payments:** Pagamentos de faturas. Relaciona uma `credit_card_invoice` a uma `transaction` (saída da conta corrente).
 
 ### 3.4. Planejamento Financeiro
-*   **budgets:** Orçamentos definidos pelo usuário. Obrigatórios: `id`, `user_id`, `category_id`, `month`, `year`, `limit_amount`. Calculados: `spent_amount`.
+*   **budgets:** Orçamentos definidos pelo usuário. Obrigatórios: `id`, `user_id`, `category_id`, `month`, `year`, `limit_amount`. Regras: RLS por auth.uid(), Unique por usuário/categoria/período. Calculados dinamicamente: `spent_amount`.
 *   **goals:** Objetivos (ex: Viagem). Obrigatórios: `id`, `user_id`, `name`, `target_amount`, `target_date`.
 *   **goal_transactions:** Aportes para os objetivos. Obrigatórios: `id`, `goal_id`, `amount`, `date`, `transaction_id` (se debitou de uma conta).
 *   **subscriptions:** Espelho visual de `transaction_recurrences` focado em assinaturas (Netflix, Academia), adicionando metadata como site e plano.
@@ -169,10 +169,14 @@ A alta performance será garantida pela criação cirúrgica de índices:
 ## 11. Estratégia Financeira
 
 *   **Transferências:** Uma tela de transferência cria 1 registro na tabela `transfers` e 2 registros na tabela `transactions` (uma despesa na conta origem, uma receita na conta destino).
-*   **Cartões e Faturas:** Despesas feitas no crédito recebem `account_id = null` e `credit_card_id = UUID`. Uma Trigger ou Edge Function soma essas despesas em `credit_card_invoices`.
-*   **Pagamento de Fatura:** Gera uma transação de despesa na Conta Corrente, que é ligada à entidade `invoice_payments` para abater a dívida.
+*   **Credit Card Invoice Flow:**
+    *   `credit_card_invoices` representa o agrupamento mensal das compras.
+    *   O cálculo ocorre através das transactions associadas ao `credit_card_id`.
+    *   O fechamento considera `closing_day` do cartão.
+    *   Pagamentos são registrados através da tabela `invoice_payments`.
+    *   O pagamento de fatura gera uma transaction de despesa na conta bancária vinculada ao `invoice_payments` para abater a dívida.
 *   **Parcelamentos:** Uma compra parcelada gera o registro pai `transaction_installments` (Ex: R$ 1.200) e o frontend/backend gera imediatamente N (ex: 12) transações filhas de R$ 100 com datas futuras atreladas.
-*   **Recorrências:** Semelhante aos parcelamentos, mas gera transações progressivamente através de Cron Jobs (Edge Functions) conforme a data de expiração se aproxima.
+*   **Recorrências e Assinaturas (`transaction_recurrences`):** Responsável por armazenar regras de recorrência (mensais/anuais). Usado em assinaturas (`subscriptions`) para projetar ou gerar transações futuras de forma automática (através de Cron Jobs / Edge Functions).
 
 ---
 

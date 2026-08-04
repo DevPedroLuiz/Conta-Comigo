@@ -16,13 +16,13 @@ export function ExpenseCard({ amount, change }: ExpenseCardProps) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">Despesas (Mês)</CardTitle>
-        <ArrowDownCircle className="h-4 w-4 text-destructive" />
+        <ArrowDownCircle className="h-4 w-4 text-destructive dark:text-red-400" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{formattedAmount}</div>
         {change !== undefined && (
           <p className="text-xs text-muted-foreground mt-1">
-            <span className={change <= 0 ? "text-emerald-500" : "text-destructive"}>
+            <span className={change <= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive dark:text-red-400"}>
               {change > 0 ? '+' : ''}{change.toFixed(1)}%
             </span>{' '}
             em relação ao mês anterior

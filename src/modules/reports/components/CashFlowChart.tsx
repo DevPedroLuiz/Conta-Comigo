@@ -11,11 +11,11 @@ interface CashFlowChartProps {
 export function CashFlowChart({ data }: CashFlowChartProps) {
   if (!data || data.length === 0) {
     return (
-      <Card className="bg-[#0c0c0e] border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle className="text-lg">Fluxo de Caixa (Evolução)</CardTitle>
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center text-zinc-500">
+        <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground">
           Nenhum dado para o período selecionado.
         </CardContent>
       </Card>
@@ -28,7 +28,7 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
   }));
 
   return (
-    <Card className="bg-[#0c0c0e] border-zinc-800">
+    <Card className="bg-card border-border">
       <CardHeader>
         <CardTitle className="text-lg">Fluxo de Caixa (Evolução)</CardTitle>
       </CardHeader>
