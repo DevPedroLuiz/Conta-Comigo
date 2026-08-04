@@ -38,7 +38,7 @@ export function GoalEditPage() {
     }
     
     loadData();
-  }, [user, id, navigate]);
+  }, [user?.id, id, navigate]);
 
   const handleSubmit = async (data: GoalFormData) => {
     if (!user || !id) return;

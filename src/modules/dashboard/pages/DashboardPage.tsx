@@ -17,7 +17,7 @@ export function DashboardPage() {
 
   useEffect(() => {
     async function loadData() {
-      if (!user?.id) return;
+      if (!user) return;
       
       setLoading(true);
       const { data: dashboardData, error } = await dashboardService.getDashboardData(user.id);

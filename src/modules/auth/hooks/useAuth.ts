@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useAuthContext } from '../../../core/providers/AuthProvider';
 import { authService } from '../services/AuthService';
 import { AuthUser, Session, AuthState } from '../../../core/types/auth';
@@ -5,7 +6,7 @@ import { AuthUser, Session, AuthState } from '../../../core/types/auth';
 export function useAuth() {
   const { authState } = useAuthContext();
   
-  return {
+  return useMemo(() => ({
     authState,
     isAuthenticated: authState === 'Authenticated',
     isUnauthenticated: authState === 'Unauthenticated',
@@ -19,7 +20,7 @@ export function useAuth() {
     logout: authService.logout,
     resetPassword: authService.resetPassword,
     updatePassword: authService.updatePassword,
-  };
+  }), [authState]);
 }
 
 export function useSession(): Session | null {
@@ -31,12 +32,15 @@ export function useSession(): Session | null {
 
 export function useUser(): AuthUser | null {
   const { user } = useAuthContext();
-  if (!user) return null;
   
-  return {
-    id: user.id,
-    email: user.email ?? '',
-    userMetadata: user.user_metadata,
-    createdAt: user.created_at,
-  };
+  return useMemo(() => {
+    if (!user) return null;
+    
+    return {
+      id: user.id,
+      email: user.email ?? '',
+      userMetadata: user.user_metadata,
+      createdAt: user.created_at,
+    };
+  }, [user]);
 }

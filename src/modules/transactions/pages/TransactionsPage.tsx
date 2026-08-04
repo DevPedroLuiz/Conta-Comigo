@@ -36,7 +36,7 @@ export function TransactionsPage() {
 
   useEffect(() => {
     loadTransactions();
-  }, [user, filterType]);
+  }, [user?.id, filterType]);
 
   const handleDelete = async (id: string) => {
     if (!user) return;

@@ -36,7 +36,7 @@ export function GoalsPage() {
 
   useEffect(() => {
     loadData();
-  }, [user]);
+  }, [user?.id]);
 
   const handleOpenProgressDialog = (goal: Goal) => {
     setSelectedGoal(goal);

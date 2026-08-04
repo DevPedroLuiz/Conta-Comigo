@@ -41,7 +41,7 @@ export function CategoryEditPage() {
     }
     
     loadData();
-  }, [user, id, navigate]);
+  }, [user?.id, id, navigate]);
 
   const handleSubmit = async (data: CategoryFormData) => {
     if (!user || !id) return;

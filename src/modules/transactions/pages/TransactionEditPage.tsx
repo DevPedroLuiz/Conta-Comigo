@@ -48,7 +48,7 @@ export function TransactionEditPage() {
     }
     
     loadData();
-  }, [user, id, navigate]);
+  }, [user?.id, id, navigate]);
 
   const handleSubmit = async (data: TransactionFormData) => {
     if (!user || !id) return;

@@ -31,7 +31,7 @@ export function CategoriesPage() {
 
   useEffect(() => {
     loadData();
-  }, [user]);
+  }, [user?.id]);
 
   const handleDelete = async (id: string) => {
     if (!user) return;

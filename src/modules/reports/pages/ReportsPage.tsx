@@ -37,7 +37,7 @@ export function ReportsPage() {
     }
     
     loadData();
-  }, [user, filters]);
+  }, [user?.id, filters]);
 
   const handleFiltersChange = (newFilters: ReportFilters) => {
     setFilters(newFilters);

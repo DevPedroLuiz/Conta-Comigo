@@ -30,7 +30,7 @@ export function TransactionCreatePage() {
     }
     
     loadFormReferences();
-  }, [user]);
+  }, [user?.id]);
 
   const handleSubmit = async (data: TransactionFormData) => {
     if (!user) return;

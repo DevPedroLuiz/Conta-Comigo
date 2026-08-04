@@ -36,7 +36,7 @@ export function AccountEditPage() {
     }
     
     loadData();
-  }, [user, id, navigate]);
+  }, [user?.id, id, navigate]);
 
   const handleSubmit = async (data: AccountFormData) => {
     if (!user || !id) return;
