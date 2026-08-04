@@ -1,0 +1,8 @@
+{
+  "name": "Conta Comigo",
+  "description": "Sistema profissional de gestão financeira pessoal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
