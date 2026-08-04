@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Receipt, Wallet, Tags, Target, Settings, LogOut, BarChart3, Sun, Moon, Monitor, CreditCard, Repeat } from 'lucide-react';
+import { LayoutDashboard, Receipt, Wallet, Tags, Briefcase, Target, Settings, LogOut, BarChart3, Sun, Moon, Monitor, CreditCard, Repeat } from 'lucide-react';
 import { useAuth, useUser } from '../../../modules/auth/hooks/useAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/avatar';
 import { Button } from '../components/button';
@@ -13,6 +13,7 @@ const navigation = [
   { name: 'Cartões', href: '/credit-cards', icon: CreditCard },
   { name: 'Categorias', href: '/categories', icon: Tags },
   { name: 'Assinaturas', href: '/subscriptions', icon: Repeat },
+  { name: 'Investimentos', href: '/investments', icon: Briefcase },
   { name: 'Metas', href: '/goals', icon: Target },
   { name: 'Relatórios', href: '/reports', icon: BarChart3 },
   { name: 'Configurações', href: '/settings', icon: Settings },

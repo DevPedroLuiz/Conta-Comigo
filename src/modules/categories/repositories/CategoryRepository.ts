@@ -8,7 +8,7 @@ export class CategoryRepository {
       .select('*')
       .or(`user_id.eq.${userId},is_default.eq.true`)
       .order('name');
-
+    
     if (error) throw error;
     return data as Category[];
   }
@@ -67,6 +67,28 @@ export class CategoryRepository {
       .eq('id', categoryId);
 
     if (error) throw error;
+  }
+
+  async getOrCreateCategoryByName(userId: string, name: string, icon: string, color: string): Promise<Category> {
+    const { data: categories } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('user_id', userId)
+      .ilike('name', `%${name}%`)
+      .limit(1);
+
+    if (categories && categories.length > 0) {
+      return categories[0] as Category;
+    }
+
+    const { data: newCat, error } = await supabase
+      .from('categories')
+      .insert({ user_id: userId, name, icon, color })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return newCat as Category;
   }
 }
 

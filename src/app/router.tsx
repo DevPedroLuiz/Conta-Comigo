@@ -37,6 +37,13 @@ import { CreditCardsPage } from '../modules/credit-cards/pages/CreditCardsPage';
 import { CreditCardCreatePage } from '../modules/credit-cards/pages/CreditCardCreatePage';
 import { CreditCardInvoicesPage } from '../modules/credit-cards/pages/CreditCardInvoicesPage';
 import { SubscriptionsPage } from '../modules/subscriptions/pages/SubscriptionsPage';
+import { InvestmentsPage } from "../modules/investments/pages/InvestmentsPage";
+import { InvestmentCreatePage } from "../modules/investments/pages/InvestmentCreatePage";
+import { AssetCreatePage } from "../modules/investments/pages/AssetCreatePage";
+import { AssetDetailsPage } from "../modules/investments/pages/AssetDetailsPage";
+import { MovementCreatePage } from "../modules/investments/pages/MovementCreatePage";
+import { DividendCreatePage } from "../modules/investments/pages/DividendCreatePage";
+
 
 
 export const router = createBrowserRouter([
@@ -98,6 +105,12 @@ export const router = createBrowserRouter([
       { path: 'credit-cards/new', element: <CreditCardCreatePage /> },
       { path: 'credit-cards/:id/invoices', element: <CreditCardInvoicesPage /> },
       { path: 'subscriptions', element: <SubscriptionsPage /> },
+      { path: 'investments', element: <InvestmentsPage /> },
+      { path: 'investments/new', element: <InvestmentCreatePage /> },
+      { path: 'investments/assets/new', element: <AssetCreatePage /> },
+      { path: 'investments/assets/:id', element: <AssetDetailsPage /> },
+      { path: 'investments/assets/:id/movement', element: <MovementCreatePage /> },
+      { path: 'investments/assets/:id/dividend', element: <DividendCreatePage /> },
 
     ],
   },

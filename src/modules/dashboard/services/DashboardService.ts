@@ -2,12 +2,14 @@ import { toast } from "sonner";
 import { dashboardRepository, DashboardSummary, Transaction, ExpenseByCategory } from '../repositories/DashboardRepository';
 import { goalService } from '../../goals/services/GoalService';
 import { GoalsSummary } from '../../goals/types/goal.types';
+import { investmentService } from '../../investments/services/InvestmentService';
 
 export interface DashboardData {
   summary: DashboardSummary;
   recentTransactions: Transaction[];
   expensesByCategory: ExpenseByCategory[];
   goalsSummary?: GoalsSummary | null;
+  investmentsTotal?: number;
 }
 
 export class DashboardService {
@@ -32,7 +34,8 @@ export class DashboardService {
         recentTransactions,
         expensesByCategory,
         accountsCount,
-        goalsResult
+        goalsResult,
+        investmentsResult
       ] = await Promise.all([
         dashboardRepository.getCurrentBalance(userId),
         dashboardRepository.getMonthlyIncome(userId, firstDayCurrentMonth, lastDayCurrentMonth),
@@ -42,13 +45,15 @@ export class DashboardService {
         dashboardRepository.getRecentTransactions(userId),
         dashboardRepository.getExpenseByCategory(userId, firstDayCurrentMonth, lastDayCurrentMonth),
         dashboardRepository.getAccountsCount(userId),
-        goalService.getGoalsSummary(userId)
+        goalService.getGoalsSummary(userId),
+        investmentService.getSummary(userId)
       ]);
 
       let incomeChange = 0;
       if (previousIncome > 0) {
         incomeChange = ((currentIncome - previousIncome) / previousIncome) * 100;
       }
+
       let expenseChange = 0;
       if (previousExpense > 0) {
         expenseChange = ((currentExpense - previousExpense) / previousExpense) * 100;
@@ -69,6 +74,7 @@ export class DashboardService {
           recentTransactions,
           expensesByCategory,
           goalsSummary: goalsResult?.data || null,
+          investmentsTotal: investmentsResult?.data?.current_total_value || 0
         }
       };
     } catch (error: any) {

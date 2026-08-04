@@ -57,8 +57,8 @@ export class DashboardRepository {
     if (txError) throw txError;
 
     const txBalance = transactions?.reduce((acc, tx) => {
-      if (tx.type === 'INCOME') return acc + Number(tx.amount);
-      if (tx.type === 'EXPENSE') return acc - Number(tx.amount);
+      if (tx.type === 'INCOME' || tx.type === 'TRANSFER_IN') return acc + Number(tx.amount);
+      if (tx.type === 'EXPENSE' || tx.type === 'TRANSFER_OUT') return acc - Number(tx.amount);
       return acc;
     }, 0) || 0;
 

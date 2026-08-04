@@ -58,7 +58,7 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <BalanceCard balance={data.summary.balance} accountsCount={data.summary.accountsCount} />
+        <BalanceCard balance={data.summary.balance} investmentsTotal={data.investmentsTotal} accountsCount={data.summary.accountsCount} />
         <IncomeCard amount={data.summary.monthlyIncome} change={data.summary.monthlyIncomeChange} />
         <ExpenseCard amount={data.summary.monthlyExpense} change={data.summary.monthlyExpenseChange} />
       </div>

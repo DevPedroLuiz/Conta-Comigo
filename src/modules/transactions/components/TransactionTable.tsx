@@ -27,7 +27,8 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
           </thead>
           <tbody>
             {transactions.map((tx) => {
-              const isIncome = tx.type === 'INCOME';
+              const isIncome = tx.type === 'INCOME' || tx.type === 'TRANSFER_IN';
+              const isTransfer = tx.type === 'TRANSFER_IN' || tx.type === 'TRANSFER_OUT';
               const formattedDate = new Date(tx.date).toLocaleDateString('pt-BR');
               const formattedAmount = new Intl.NumberFormat('pt-BR', {
                 style: 'currency',
@@ -53,22 +54,26 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
                   </td>
                   <td className="p-4 align-middle text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                        onClick={() => navigate(`/transactions/${tx.id}/edit`)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive dark:text-red-400"
-                        onClick={() => onDelete(tx.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {!isTransfer && (
+                        <>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            onClick={() => navigate(`/transactions/${tx.id}/edit`)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive dark:text-red-400"
+                            onClick={() => onDelete(tx.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
