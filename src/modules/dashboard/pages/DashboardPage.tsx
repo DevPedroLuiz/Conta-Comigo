@@ -17,7 +17,7 @@ export function DashboardPage() {
 
   useEffect(() => {
     async function loadData() {
-      if (!user) return;
+      if (!user?.id) return;
       
       setLoading(true);
       const { data: dashboardData, error } = await dashboardService.getDashboardData(user.id);
@@ -30,7 +30,7 @@ export function DashboardPage() {
       setLoading(false);
     }
     loadData();
-  }, [user]);
+  }, [user?.id]);
 
   if (loading) {
     return (
