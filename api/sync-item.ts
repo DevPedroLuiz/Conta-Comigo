@@ -71,33 +71,73 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let totalSynced = 0;
 
     for (const pluggyAccount of accounts) {
-      const typeMapping: Record<string, string> = {
-        'CHECKING': 'CHECKING_ACCOUNT',
-        'SAVINGS': 'SAVINGS_ACCOUNT',
-        'CREDIT': 'CREDIT_CARD'
-      };
-      const accountType = typeMapping[pluggyAccount.type] || 'CHECKING_ACCOUNT';
+      const isCreditCard = pluggyAccount.type === 'CREDIT' || pluggyAccount.subtype === 'CREDIT_CARD';
+      
+      let targetAccountId = null;
+      let targetCreditCardId = null;
 
-      const newAccount = {
-        user_id: user.id,
-        name: pluggyAccount.name || 'Conta Sincronizada',
-        type: accountType,
-        initial_balance: 0,
-        current_balance: pluggyAccount.balance || 0,
-        currency: pluggyAccount.currencyCode || 'BRL',
-        pluggy_account_id: pluggyAccount.id,
-        pluggy_item_id: itemId
-      };
+      if (isCreditCard) {
+        // Upsert no credit_cards
+        const creditData = pluggyAccount.creditData || {};
+        
+        // Padrão para fallback
+        const closingDay = creditData.balanceCloseDate ? new Date(creditData.balanceCloseDate).getDate() : 1;
+        const dueDay = creditData.balanceDueDate ? new Date(creditData.balanceDueDate).getDate() : 10;
+        
+        const newCreditCard = {
+          user_id: user.id,
+          name: pluggyAccount.name || 'Cartão Sincronizado',
+          limit: creditData.creditLimit || 0,
+          closing_day: closingDay,
+          due_day: dueDay,
+          brand: creditData.brand || 'Outro',
+          color: '#4f46e5',
+          pluggy_account_id: pluggyAccount.id,
+          pluggy_item_id: itemId
+        };
 
-      const { data: dbAccount, error: accountError } = await supabase
-        .from('accounts')
-        .upsert(newAccount, { onConflict: 'pluggy_account_id' })
-        .select('id, user_id')
-        .single();
+        const { data: dbCard, error: cardError } = await supabase
+          .from('credit_cards')
+          .upsert(newCreditCard, { onConflict: 'pluggy_account_id' })
+          .select('id, user_id')
+          .single();
 
-      if (accountError || !dbAccount) {
-        console.error(`Erro ao inserir/atualizar conta ${pluggyAccount.id}:`, accountError);
-        continue;
+        if (cardError || !dbCard) {
+          console.error(`Erro ao inserir/atualizar cartão ${pluggyAccount.id}:`, cardError);
+          continue;
+        }
+        
+        targetCreditCardId = dbCard.id;
+      } else {
+        const typeMapping: Record<string, string> = {
+          'CHECKING': 'CHECKING_ACCOUNT',
+          'SAVINGS': 'SAVINGS_ACCOUNT',
+        };
+        const accountType = typeMapping[pluggyAccount.type] || 'CHECKING_ACCOUNT';
+
+        const newAccount = {
+          user_id: user.id,
+          name: pluggyAccount.name || 'Conta Sincronizada',
+          type: accountType,
+          initial_balance: 0,
+          current_balance: pluggyAccount.balance || 0,
+          currency: pluggyAccount.currencyCode || 'BRL',
+          pluggy_account_id: pluggyAccount.id,
+          pluggy_item_id: itemId
+        };
+
+        const { data: dbAccount, error: accountError } = await supabase
+          .from('accounts')
+          .upsert(newAccount, { onConflict: 'pluggy_account_id' })
+          .select('id, user_id')
+          .single();
+
+        if (accountError || !dbAccount) {
+          console.error(`Erro ao inserir/atualizar conta ${pluggyAccount.id}:`, accountError);
+          continue;
+        }
+        
+        targetAccountId = dbAccount.id;
       }
 
       const transactionsResponse = await fetch(`https://api.pluggy.ai/v2/transactions?accountId=${pluggyAccount.id}`, {
@@ -117,7 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data: defaultCategory } = await supabase
         .from('categories')
         .select('id')
-        .eq('user_id', dbAccount.user_id)
+        .eq('user_id', user.id)
         .eq('type', 'EXPENSE')
         .limit(1)
         .single();
@@ -134,8 +174,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
          const mappedStatus = pluggyTx.status === 'PENDING' ? 'UNPAID' : 'PAID';
          
          const newTx = {
-            user_id: dbAccount.user_id,
-            account_id: dbAccount.id,
+            user_id: user.id,
+            account_id: targetAccountId,
+            credit_card_id: targetCreditCardId,
             category_id: defaultCategory?.id || null,
             type: type,
             description: pluggyTx.description || 'Transação Importada',

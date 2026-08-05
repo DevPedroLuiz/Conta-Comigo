@@ -1,0 +1,3 @@
+ALTER TABLE credit_cards
+ADD COLUMN IF NOT EXISTS pluggy_account_id VARCHAR UNIQUE,
+ADD COLUMN IF NOT EXISTS pluggy_item_id VARCHAR;

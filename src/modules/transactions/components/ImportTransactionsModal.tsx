@@ -6,7 +6,7 @@ import { parsePDF } from '../utils/pdfParser';
 import { UploadCloud, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { transactionService } from '../services/TransactionService';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../core/ui/components/select';
 import { Label } from '../../../core/ui/components/label';
 import { toast } from 'sonner';
@@ -28,32 +28,31 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
   const [dragActive, setDragActive] = useState(false);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   
-  const [accounts, setAccounts] = useState<{ id: string; name: string }[]>([]);
-  const [categories, setCategories] = useState<{ id: string; name: string; type: string }[]>([]);
-  const [defaultCategory, setDefaultCategory] = useState<{ id: string; name: string; type: string } | null>(null);
+  const { data: formData, isLoading: isLoadingForm } = useQuery({
+    queryKey: ['transaction-form-data', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await transactionService.getFormData(user.id);
+      if (error) throw new Error(error.message);
+      return data;
+    },
+    enabled: open && !!user,
+  });
+
+  const accounts = formData?.accounts || [];
+  const categories = formData?.categories || [];
+  const defaultCategory = categories.find(c => c.type === 'EXPENSE') || categories[0] || null;
 
   useEffect(() => {
-    if (open && user) {
-      const fetchData = async () => {
-        const { data } = await transactionService.getFormData(user.id);
-        if (data) {
-          setAccounts(data.accounts || []);
-          setCategories(data.categories || []);
-          
-          const defaultCat = data.categories?.find(c => c.type === 'EXPENSE') || data.categories?.[0] || null;
-          setDefaultCategory(defaultCat);
-          
-          if (!selectedAccountId && data.accounts && data.accounts.length > 0) {
-            setSelectedAccountId(data.accounts[0].id);
-          }
-          if (!selectedCategoryId && defaultCat) {
-            setSelectedCategoryId(defaultCat.id);
-          }
-        }
-      };
-      fetchData();
+    if (open && formData) {
+      if (!selectedAccountId && accounts.length > 0) {
+        setSelectedAccountId(accounts[0].id);
+      }
+      if (!selectedCategoryId && defaultCategory) {
+        setSelectedCategoryId(defaultCategory.id);
+      }
     }
-  }, [open, user]);
+  }, [open, formData, accounts, categories, defaultCategory, selectedAccountId, selectedCategoryId]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -230,28 +229,36 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Conta de Destino</Label>
-                <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                <Select value={selectedAccountId} onValueChange={setSelectedAccountId} disabled={isLoadingForm || accounts.length === 0}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma conta" />
+                    <SelectValue placeholder={isLoadingForm ? "Carregando contas..." : "Selecione uma conta"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {accounts.map(acc => (
-                      <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
-                    ))}
+                    {accounts.length === 0 && !isLoadingForm ? (
+                      <SelectItem value="empty" disabled>Nenhuma conta cadastrada</SelectItem>
+                    ) : (
+                      accounts.map(acc => (
+                        <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <Label>Categoria Padrão</Label>
-                <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId} disabled={isLoadingForm || categories.length === 0}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione a categoria" />
+                    <SelectValue placeholder={isLoadingForm ? "Carregando categorias..." : "Selecione a categoria"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                    ))}
+                    {categories.length === 0 && !isLoadingForm ? (
+                      <SelectItem value="empty" disabled>Nenhuma categoria cadastrada</SelectItem>
+                    ) : (
+                      categories.map(cat => (
+                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -300,3 +307,4 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
     </Dialog>
   );
 }
+
