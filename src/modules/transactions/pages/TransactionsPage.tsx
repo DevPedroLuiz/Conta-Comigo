@@ -3,7 +3,7 @@ import { useUser } from '../../auth/hooks/useAuth';
 import { transactionService } from '../services/TransactionService';
 import { Transaction, TransactionType } from '../types/transaction.types';
 import { Button } from '../../../core/ui/components/button';
-import { Plus, Link as LinkIcon } from 'lucide-react';
+import { Plus, Link as LinkIcon, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { TransactionTable } from '../components/TransactionTable';
 import { TransactionEmptyState } from '../components/TransactionEmptyState';
@@ -11,7 +11,9 @@ import { TransactionFilters } from '../components/TransactionFilters';
 import { Spinner } from '../../../core/ui/components/spinner';
 import { toast } from 'sonner';
 import { BankSyncModal } from '../../open-finance/components/BankSyncModal';
+import { ImportTransactionsModal } from '../components/ImportTransactionsModal';
 import { PageTransition } from '../../../core/ui/components/PageTransition';
+import { useTransactionsSubscription } from '../hooks/useTransactionsSubscription';
 
 export function TransactionsPage() {
   const user = useUser();
@@ -20,6 +22,9 @@ export function TransactionsPage() {
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<TransactionType | 'ALL'>('ALL');
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
+  useTransactionsSubscription();
 
   const loadTransactions = async () => {
     if (!user) return;
@@ -59,6 +64,10 @@ export function TransactionsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Transações</h2>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            Importar OFX/CSV
+          </Button>
           <Button variant="outline" onClick={() => setIsSyncModalOpen(true)}>
             <LinkIcon className="mr-2 h-4 w-4" />
             Sincronizar Banco
@@ -86,6 +95,11 @@ export function TransactionsPage() {
         open={isSyncModalOpen} 
         onOpenChange={setIsSyncModalOpen}
         onSyncComplete={loadTransactions}
+      />
+
+      <ImportTransactionsModal
+        open={isImportModalOpen}
+        onOpenChange={setIsImportModalOpen}
       />
     </PageTransition>
   );

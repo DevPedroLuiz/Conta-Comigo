@@ -78,6 +78,21 @@ export class TransactionRepository {
     return data as Transaction[];
   }
 
+  async upsertMultipleTransactions(transactions: any[]): Promise<Transaction[]> {
+    // For manual OFX imports, some might not have fitId/pluggy_transaction_id.
+    // We can't batch upsert on a unique constraint if some have null values for that constraint, 
+    // but PostgreSQL handles nulls in unique constraints by treating them as distinct.
+    // Wait, upsert with onConflict needs a specific column.
+    // If we use 'pluggy_transaction_id' and it's null, it might be fine or we might want to just insert them if they don't have fitId.
+    const { data, error } = await supabase
+      .from('transactions')
+      .upsert(transactions, { onConflict: 'pluggy_transaction_id', ignoreDuplicates: true })
+      .select();
+
+    if (error) throw error;
+    return data as Transaction[];
+  }
+
   async updateTransaction(userId: string, transactionId: string, updates: Partial<Transaction>): Promise<Transaction> {
     const { data, error } = await supabase
       .from('transactions')

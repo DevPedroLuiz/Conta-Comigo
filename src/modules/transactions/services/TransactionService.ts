@@ -124,6 +124,19 @@ export class TransactionService {
     }
   }
 
+  async importBatchTransactions(userId: string, transactions: any[]) {
+    try {
+      const created = await transactionRepository.upsertMultipleTransactions(transactions);
+      return { data: created, error: null };
+    } catch (error: unknown) {
+      console.error('Error importing transactions:', error);
+      if (error instanceof Error) {
+        return { data: null, error: { message: error.message } };
+      }
+      return { data: null, error: { message: 'Ocorreu um erro inesperado na importação.' } };
+    }
+  }
+
   async getFormData(userId: string) {
     try {
       const [accounts, categories, creditCards] = await Promise.all([
