@@ -4,6 +4,9 @@ import { Pencil, Target, Plus, CheckCircle2, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { GoalProgress } from './GoalProgress';
 import { format } from 'date-fns';
+import { motion } from 'framer-motion';
+import confetti from 'canvas-confetti';
+import { useEffect, useState } from 'react';
 
 interface GoalCardProps {
   key?: string | number;
@@ -15,10 +18,32 @@ export function GoalCard({ goal, onAddProgress }: GoalCardProps) {
   const navigate = useNavigate();
   const current = Number(goal.current_amount);
   const target = Number(goal.target_amount);
+  const percentage = (current / target) * 100;
+  const [hasCelebrated, setHasCelebrated] = useState(false);
+
+  useEffect(() => {
+    if (percentage >= 100 && !hasCelebrated) {
+      handleCelebrate();
+      setHasCelebrated(true);
+    }
+  }, [percentage, hasCelebrated]);
+
+  const handleCelebrate = () => {
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#6366f1', '#a855f7', '#ec4899'],
+    });
+  };
 
   return (
-    <div className="flex flex-col p-5 rounded-xl border border-border bg-card hover:border-border transition-colors gap-4">
+    <motion.div 
+      whileHover={{ scale: 1.02 }}
+      className="flex flex-col p-5 rounded-xl border border-border bg-card hover:border-border transition-colors gap-4"
+    >
       <div className="flex items-start justify-between">
+      
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Target className="h-5 w-5" />
@@ -81,6 +106,6 @@ export function GoalCard({ goal, onAddProgress }: GoalCardProps) {
           </Button>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

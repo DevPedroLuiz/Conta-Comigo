@@ -3,13 +3,15 @@ import { useUser } from '../../auth/hooks/useAuth';
 import { transactionService } from '../services/TransactionService';
 import { Transaction, TransactionType } from '../types/transaction.types';
 import { Button } from '../../../core/ui/components/button';
-import { Plus } from 'lucide-react';
+import { Plus, Link as LinkIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { TransactionTable } from '../components/TransactionTable';
 import { TransactionEmptyState } from '../components/TransactionEmptyState';
 import { TransactionFilters } from '../components/TransactionFilters';
 import { Spinner } from '../../../core/ui/components/spinner';
 import { toast } from 'sonner';
+import { BankSyncModal } from '../../open-finance/components/BankSyncModal';
+import { PageTransition } from '../../../core/ui/components/PageTransition';
 
 export function TransactionsPage() {
   const user = useUser();
@@ -17,6 +19,7 @@ export function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<TransactionType | 'ALL'>('ALL');
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
 
   const loadTransactions = async () => {
     if (!user) return;
@@ -52,13 +55,19 @@ export function TransactionsPage() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+    <PageTransition className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Transações</h2>
-        <Button onClick={() => navigate('/transactions/new')}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova transação
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Button variant="outline" onClick={() => setIsSyncModalOpen(true)}>
+            <LinkIcon className="mr-2 h-4 w-4" />
+            Sincronizar Banco
+          </Button>
+          <Button onClick={() => navigate('/transactions/new')}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova transação
+          </Button>
+        </div>
       </div>
 
       <TransactionFilters type={filterType} onChangeType={setFilterType} />
@@ -72,6 +81,13 @@ export function TransactionsPage() {
       ) : (
         <TransactionTable transactions={transactions} onDelete={handleDelete} />
       )}
-    </div>
+      
+      <BankSyncModal 
+        open={isSyncModalOpen} 
+        onOpenChange={setIsSyncModalOpen}
+        onSyncComplete={loadTransactions}
+      />
+    </PageTransition>
   );
 }
+

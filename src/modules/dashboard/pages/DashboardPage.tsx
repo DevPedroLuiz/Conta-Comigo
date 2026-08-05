@@ -9,6 +9,7 @@ import { ExpenseChart } from '../components/ExpenseChart';
 import { GoalsSummaryCard } from '../components/GoalsSummaryCard';
 import { Skeleton } from '../../../core/ui/components/skeleton';
 import { SortableWidget } from '../components/SortableWidget';
+import { PageTransition } from '../../../core/ui/components/PageTransition';
 import {
   DndContext,
   closestCenter,
@@ -114,7 +115,7 @@ export function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <PageTransition className="space-y-6">
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <Skeleton className="h-9 w-48" />
           <Skeleton className="h-5 w-32" />
@@ -124,20 +125,20 @@ export function DashboardPage() {
              <Skeleton key={widget.id} className={`h-[120px] md:h-[300px] w-full ${widget.className}`} />
           ))}
         </div>
-      </div>
+      </PageTransition>
     );
   }
 
   if (isError || !data) {
     return (
-      <div className="flex h-[50vh] items-center justify-center text-muted-foreground">
+      <PageTransition className="flex h-[50vh] items-center justify-center text-muted-foreground">
         Ocorreu um erro ao carregar os dados do dashboard.
-      </div>
+      </PageTransition>
     );
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+    <PageTransition className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Visão Geral</h2>
         <div className="text-sm text-muted-foreground">
@@ -163,6 +164,6 @@ export function DashboardPage() {
           </SortableContext>
         </div>
       </DndContext>
-    </div>
+    </PageTransition>
   );
 }
