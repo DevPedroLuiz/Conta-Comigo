@@ -28,6 +28,8 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
   const [isLoading, setIsLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
+
   const { data: formRefs } = useQuery({
     queryKey: ['transaction-form-refs', user?.id],
     queryFn: () => transactionService.getFormData(user!.id),
@@ -58,7 +60,6 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
   };
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
     if (e.target.files && e.target.files[0]) {
       await processFile(e.target.files[0]);
     }
@@ -66,6 +67,9 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
 
   const processFile = async (file: File) => {
     try {
+      setIsProcessingFile(true);
+      toast.info('Processando arquivo, por favor aguarde...', { id: 'processing-file' });
+      
       let transactions: ParsedTransaction[] = [];
       if (file.name.toLowerCase().endsWith('.ofx')) {
         const text = await file.text();
@@ -76,10 +80,22 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
       } else if (file.name.toLowerCase().endsWith('.pdf')) {
         transactions = await parsePDF(file);
       } else {
+        toast.dismiss('processing-file');
         toast.error('Formato não suportado. Envie um arquivo .ofx, .csv ou .pdf.');
+        setIsProcessingFile(false);
         return;
       }
+      
+      if (transactions.length === 0) {
+        toast.dismiss('processing-file');
+        toast.error('Nenhuma transação encontrada ou falha ao ler o arquivo. Se for um PDF, certifique-se de que não é uma imagem escaneada.');
+        setIsProcessingFile(false);
+        return;
+      }
+
       setParsedData(transactions);
+      toast.dismiss('processing-file');
+      toast.success('Arquivo lido com sucesso!');
       
       // Auto-select first account if none selected
       if (!selectedAccountId && accounts.length > 0) {
@@ -89,8 +105,16 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
         setSelectedCategoryId(defaultCategory.id);
       }
     } catch (error) {
-      toast.error('Erro ao processar o arquivo.');
+      toast.dismiss('processing-file');
       console.error(error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Falha ao ler o arquivo: ${errorMessage}. Verifique se o formato é válido.`);
+    } finally {
+      setIsProcessingFile(false);
+      // Limpar o input de arquivo para permitir selecionar o mesmo arquivo novamente
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -161,15 +185,21 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
               className="hidden"
               onChange={handleChange}
             />
-            <UploadCloud className="h-10 w-10 text-muted-foreground mb-4" />
+            {isProcessingFile ? (
+              <div className="h-10 w-10 flex items-center justify-center mb-4">
+                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <UploadCloud className="h-10 w-10 text-muted-foreground mb-4" />
+            )}
             <p className="text-sm font-medium text-center mb-1">
-              Arraste e solte seu arquivo aqui
+              {isProcessingFile ? 'Processando arquivo...' : 'Arraste e solte seu arquivo aqui'}
             </p>
             <p className="text-xs text-muted-foreground text-center mb-4">
               ou clique para selecionar do seu computador (OFX, CSV, PDF)
             </p>
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-              Selecionar Arquivo
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessingFile}>
+              {isProcessingFile ? 'Processando...' : 'Selecionar Arquivo'}
             </Button>
           </div>
         ) : (
