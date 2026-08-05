@@ -41,6 +41,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(401).json({ error: 'Unauthorized: Invalid token' });
     }
 
+    const authResponse = await fetch('https://api.pluggy.ai/auth', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        clientId: PLUGGY_CLIENT_ID,
+        clientSecret: PLUGGY_CLIENT_SECRET,
+      }),
+    });
+
+    if (!authResponse.ok) {
+      console.error('Failed to authenticate with Pluggy API');
+      return res.status(500).json({ error: 'Failed to authenticate with Pluggy' });
+    }
+
+    const { apiKey: pluggyApiKey } = await authResponse.json();
+
     const pluggyClient = new PluggyClient({
       clientId: PLUGGY_CLIENT_ID,
       clientSecret: PLUGGY_CLIENT_SECRET,
@@ -82,8 +100,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         continue;
       }
 
-      const transactionsResponse = await pluggyClient.fetchTransactions(pluggyAccount.id);
-      const transactions = transactionsResponse.results;
+      const transactionsResponse = await fetch(`https://api.pluggy.ai/v2/transactions?accountId=${pluggyAccount.id}`, {
+        headers: {
+          'X-API-KEY': pluggyApiKey
+        }
+      });
+
+      if (!transactionsResponse.ok) {
+        console.error(`Failed to fetch transactions for account ${pluggyAccount.id} from v2 API`);
+        continue;
+      }
+
+      const transactionsData = await transactionsResponse.json();
+      const transactions = transactionsData.results || [];
 
       const { data: defaultCategory } = await supabase
         .from('categories')
