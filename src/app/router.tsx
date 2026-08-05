@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, ComponentType } from 'react';
 import { MainLayout } from '../core/ui/layout/MainLayout';
 import { AuthLayout } from '../core/ui/layout/AuthLayout';
 import { AuthGuard } from './guards/AuthGuard';
@@ -7,7 +7,7 @@ import { GuestGuard } from './guards/GuestGuard';
 import { OnboardingGuard } from './guards/OnboardingGuard';
 import { Spinner } from '../core/ui/components/spinner';
 
-const withSuspense = (Component: React.ComponentType) => (
+const withSuspense = (Component: ComponentType) => (
   <Suspense fallback={<div className="flex h-screen w-full items-center justify-center"><Spinner className="h-8 w-8" /></div>}>
     <Component />
   </Suspense>

@@ -27,7 +27,7 @@ export function TransactionForm({ initialData, accounts, categories, creditCards
   const [aiSuggested, setAiSuggested] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<TransactionFormData>({
-    resolver: zodResolver(transactionSchema),
+    resolver: zodResolver(transactionSchema) as unknown as any,
     defaultValues: initialData || {
       type: 'EXPENSE',
       amount: 0,
