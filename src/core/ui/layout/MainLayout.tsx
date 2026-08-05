@@ -1,9 +1,10 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Receipt, Wallet, Tags, Briefcase, Target, Settings, LogOut, BarChart3, Sun, Moon, Monitor, CreditCard, Repeat } from 'lucide-react';
+import { LayoutDashboard, Receipt, Wallet, Tags, Briefcase, Target, Settings, LogOut, BarChart3, Sun, Moon, Monitor, CreditCard, Repeat, Menu } from 'lucide-react';
 import { useAuth, useUser } from '../../../modules/auth/hooks/useAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/avatar';
 import { Button } from '../components/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/dropdown-menu';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from '../components/sheet';
 import { useTheme } from '../../providers/ThemeProvider';
 
 const navigation = [
@@ -64,11 +65,52 @@ export function MainLayout() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col bg-background">
         {/* Mobile Header (Fallback) */}
-        <header className="md:hidden border-b border-border bg-card px-6 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">Conta Comigo</h1>
-          <Avatar className="h-8 w-8">
-            <AvatarFallback>{initial}</AvatarFallback>
-          </Avatar>
+        <header className="md:hidden border-b border-border bg-card px-4 h-16 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-64 bg-card">
+                <div className="p-6 flex items-center gap-3 border-b border-border">
+                  <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(79,70,229,0.3)]">
+                    <div className="w-4 h-4 border-2 border-white rounded-sm"></div>
+                  </div>
+                  <h1 className="text-lg font-semibold tracking-tight text-foreground">Conta Comigo</h1>
+                </div>
+                <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto pb-4">
+                  <div className="px-2 py-2 text-xs font-medium text-muted-foreground uppercase tracking-widest mb-2">Menu Principal</div>
+                  {navigation.map((item) => {
+                    const isActive = location.pathname.startsWith(item.href);
+                    return (
+                      <SheetClose asChild key={item.name}>
+                        <Link
+                          to={item.href}
+                          className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                            isActive 
+                              ? 'bg-card text-foreground' 
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                          }`}
+                        >
+                          <item.icon className="w-4 h-4" />
+                          {item.name}
+                        </Link>
+                      </SheetClose>
+                    );
+                  })}
+                </nav>
+              </SheetContent>
+            </Sheet>
+            <h1 className="text-xl font-semibold tracking-tight text-foreground">Conta Comigo</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback>{initial}</AvatarFallback>
+            </Avatar>
+          </div>
         </header>
         
         {/* Top Header */}
