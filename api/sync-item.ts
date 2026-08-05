@@ -131,6 +131,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
          
          const type = isExpense ? 'EXPENSE' : 'INCOME';
          
+         const mappedStatus = pluggyTx.status === 'PENDING' ? 'PENDING' : 'COMPLETED';
+         
          const newTx = {
             user_id: dbAccount.user_id,
             account_id: dbAccount.id,
@@ -140,7 +142,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             amount: finalAmount,
             date: new Date(pluggyTx.date).toISOString().substring(0, 10),
             pluggy_transaction_id: pluggyTx.id,
-            status: pluggyTx.status || 'POSTED'
+            status: mappedStatus
          };
 
          const { error: upsertError } = await supabase
