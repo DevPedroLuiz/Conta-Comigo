@@ -66,7 +66,7 @@ export function TransactionsPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
             <Upload className="mr-2 h-4 w-4" />
-            Importar OFX/CSV
+            Importar OFX/CSV/PDF
           </Button>
           <Button variant="outline" onClick={() => setIsSyncModalOpen(true)}>
             <LinkIcon className="mr-2 h-4 w-4" />

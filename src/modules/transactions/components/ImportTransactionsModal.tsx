@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../../core/ui/components/dialog';
 import { Button } from '../../../core/ui/components/button';
 import { parseOFX, parseCSV, ParsedTransaction } from '../utils/ofxParser';
@@ -6,8 +6,7 @@ import { parsePDF } from '../utils/pdfParser';
 import { UploadCloud, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { transactionService } from '../services/TransactionService';
-import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { referenceRepository } from '../repositories/TransactionRepository';
+import { useQueryClient } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../core/ui/components/select';
 import { Label } from '../../../core/ui/components/label';
 import { toast } from 'sonner';
@@ -27,18 +26,34 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-
   const [isProcessingFile, setIsProcessingFile] = useState(false);
+  
+  const [accounts, setAccounts] = useState<{ id: string; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string; type: string }[]>([]);
+  const [defaultCategory, setDefaultCategory] = useState<{ id: string; name: string; type: string } | null>(null);
 
-  const { data: formRefs } = useQuery({
-    queryKey: ['transaction-form-refs', user?.id],
-    queryFn: () => transactionService.getFormData(user!.id),
-    enabled: !!user,
-  });
-
-  const accounts = formRefs?.data?.accounts || [];
-  const categories = formRefs?.data?.categories || [];
-  const defaultCategory = categories.find(c => c.type === 'EXPENSE') || categories[0];
+  useEffect(() => {
+    if (open && user) {
+      const fetchData = async () => {
+        const { data } = await transactionService.getFormData(user.id);
+        if (data) {
+          setAccounts(data.accounts || []);
+          setCategories(data.categories || []);
+          
+          const defaultCat = data.categories?.find(c => c.type === 'EXPENSE') || data.categories?.[0] || null;
+          setDefaultCategory(defaultCat);
+          
+          if (!selectedAccountId && data.accounts && data.accounts.length > 0) {
+            setSelectedAccountId(data.accounts[0].id);
+          }
+          if (!selectedCategoryId && defaultCat) {
+            setSelectedCategoryId(defaultCat.id);
+          }
+        }
+      };
+      fetchData();
+    }
+  }, [open, user]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
