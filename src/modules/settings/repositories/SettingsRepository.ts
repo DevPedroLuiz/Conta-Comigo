@@ -33,6 +33,10 @@ export class SettingsRepository {
 
     if (error) throw error;
   }
+
+  async exportUserData() {
+    return supabase.rpc('export_user_data');
+  }
 }
 
 export const settingsRepository = new SettingsRepository();

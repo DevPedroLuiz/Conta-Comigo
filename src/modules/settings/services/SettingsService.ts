@@ -20,10 +20,13 @@ export class SettingsService {
     try {
       const { profile, settings } = await settingsRepository.getProfileAndSettings(userId);
       return { data: { profile, settings } };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching user data:', error);
       toast.error('Erro ao carregar configurações');
-      return { error };
+      if (error instanceof Error) {
+        return { error: error.message };
+      }
+      return { error: 'Ocorreu um erro inesperado.' };
     }
   }
 
@@ -31,10 +34,13 @@ export class SettingsService {
     try {
       await settingsRepository.updateProfile(userId, data);
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating profile:', error);
       toast.error('Erro ao atualizar perfil');
-      return { error };
+      if (error instanceof Error) {
+        return { error: error.message };
+      }
+      return { error: 'Ocorreu um erro inesperado.' };
     }
   }
 
@@ -42,11 +48,23 @@ export class SettingsService {
     try {
       await settingsRepository.updateSettings(userId, data);
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating settings:', error);
       toast.error('Erro ao atualizar configurações');
-      return { error };
+      if (error instanceof Error) {
+        return { error: error.message };
+      }
+      return { error: 'Ocorreu um erro inesperado.' };
     }
+  }
+
+  async exportUserData() {
+    const { data, error } = await settingsRepository.exportUserData();
+    if (error) {
+      console.error('Error exporting data:', error);
+      throw new Error(error.message);
+    }
+    return data;
   }
 }
 

@@ -11,6 +11,8 @@ import { Label } from '../../../core/ui/components/label';
 import { Button } from '../../../core/ui/components/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../core/ui/components/select';
 import { Spinner } from '../../../core/ui/components/spinner';
+import { AccountDeletionDialog } from '../components/AccountDeletionDialog';
+import { DataExportSection } from '../components/DataExportSection';
 
 export function SettingsPage() {
   const user = useUser();
@@ -230,6 +232,42 @@ export function SettingsPage() {
               </Button>
             </CardFooter>
           </form>
+        </Card>
+      </div>
+
+      <div className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Privacidade e Dados</CardTitle>
+            <CardDescription>
+              Gerencie seus dados pessoais de acordo com a LGPD.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DataExportSection />
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-6">
+        <Card className="border-destructive/20 bg-destructive/5">
+          <CardHeader>
+            <CardTitle className="text-destructive">Zona de Perigo</CardTitle>
+            <CardDescription>
+              Ações irreversíveis que afetam permanentemente sua conta e seus dados.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <p className="font-medium">Excluir Conta</p>
+                <p className="text-sm text-muted-foreground">
+                  Apaga definitivamente sua conta, perfil, configurações e todos os dados associados.
+                </p>
+              </div>
+              <AccountDeletionDialog />
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>

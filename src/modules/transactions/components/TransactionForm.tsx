@@ -7,9 +7,10 @@ import { Label } from '../../../core/ui/components/label';
 import { Textarea } from '../../../core/ui/components/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../core/ui/components/select';
 import { RadioGroup, RadioGroupItem } from '../../../core/ui/components/radio-group';
-import { ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { suggestCategory } from '../utils/categoryMatcher';
 
 interface TransactionFormProps {
   initialData?: TransactionFormData;
@@ -23,9 +24,10 @@ interface TransactionFormProps {
 export function TransactionForm({ initialData, accounts, categories, creditCards = [], onSubmit, isLoading }: TransactionFormProps) {
   const navigate = useNavigate();
   const [sourceType, setSourceType] = useState<'account' | 'credit_card'>(initialData?.credit_card_id ? 'credit_card' : 'account');
+  const [aiSuggested, setAiSuggested] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<TransactionFormData>({
-    resolver: zodResolver(transactionSchema) as any,
+    resolver: zodResolver(transactionSchema),
     defaultValues: initialData || {
       type: 'EXPENSE',
       amount: 0,
@@ -64,6 +66,7 @@ export function TransactionForm({ initialData, accounts, categories, creditCards
           onValueChange={(val) => {
             setValue('type', val as 'INCOME' | 'EXPENSE');
             setValue('category_id', ''); // reset category on type change
+            setAiSuggested(false);
             if (val === 'INCOME') handleSourceChange('account');
           }}
           className="grid grid-cols-2 gap-4"
@@ -125,6 +128,16 @@ export function TransactionForm({ initialData, accounts, categories, creditCards
           id="description"
           placeholder="Ex: Supermercado"
           {...register('description')}
+          onBlur={(e) => {
+            const desc = e.target.value;
+            if (desc && !categoryId) {
+              const suggestedId = suggestCategory(desc, filteredCategories);
+              if (suggestedId) {
+                setValue('category_id', suggestedId, { shouldValidate: true });
+                setAiSuggested(true);
+              }
+            }
+          }}
         />
         {errors.description && <p className="text-sm text-destructive dark:text-red-400">{errors.description.message}</p>}
       </div>
@@ -192,10 +205,21 @@ export function TransactionForm({ initialData, accounts, categories, creditCards
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label>Categoria</Label>
+          <div className="flex items-center justify-between">
+            <Label>Categoria</Label>
+            {aiSuggested && (
+              <span className="flex items-center gap-1 text-xs font-medium text-purple-600 dark:text-purple-400">
+                <Sparkles className="h-3 w-3" />
+                Sugerida
+              </span>
+            )}
+          </div>
           <Select 
             value={categoryId} 
-            onValueChange={(val) => setValue('category_id', val)}
+            onValueChange={(val) => {
+              setValue('category_id', val);
+              setAiSuggested(false);
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione uma categoria" />

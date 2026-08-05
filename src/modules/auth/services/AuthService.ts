@@ -53,6 +53,14 @@ export class AuthService {
     if (error) throw new Error(error.message);
     return data.session;
   }
+
+  async deleteAccount(): Promise<void> {
+    const { error } = await authRepository.deleteAccount();
+    if (error) throw new Error(error.message);
+    await this.logout();
+    localStorage.clear();
+    sessionStorage.clear();
+  }
 }
 
 export const authService = new AuthService();

@@ -1,49 +1,42 @@
-import { useEffect, useState } from 'react';
 import { useUser } from '../../auth/hooks/useAuth';
-import { dashboardService, DashboardData } from '../services/DashboardService';
+import { useDashboardData } from '../hooks/useDashboardData';
 import { BalanceCard } from '../components/BalanceCard';
 import { IncomeCard } from '../components/IncomeCard';
 import { ExpenseCard } from '../components/ExpenseCard';
 import { RecentTransactions } from '../components/RecentTransactions';
 import { ExpenseChart } from '../components/ExpenseChart';
 import { GoalsSummaryCard } from '../components/GoalsSummaryCard';
-import { Spinner } from '../../../core/ui/components/spinner';
-import { toast } from 'sonner';
+import { Skeleton } from '../../../core/ui/components/skeleton';
 
 export function DashboardPage() {
   const user = useUser();
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, isError } = useDashboardData(user?.id);
 
-  useEffect(() => {
-    async function loadData() {
-      if (!user) return;
-      
-      setLoading(true);
-      const { data: dashboardData, error } = await dashboardService.getDashboardData(user.id);
-      
-      if (error) {
-        toast.error('Erro ao carregar os dados do dashboard.');
-      } else if (dashboardData) {
-        setData(dashboardData);
-      }
-      setLoading(false);
-    }
-    loadData();
-  }, [user?.id]);
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Spinner className="h-8 w-8" />
+      <div className="space-y-6">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-5 w-32" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Skeleton className="h-[120px] w-full" />
+          <Skeleton className="h-[120px] w-full" />
+          <Skeleton className="h-[120px] w-full" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-10">
+          <Skeleton className="h-[300px] col-span-1 md:col-span-3 lg:col-span-4" />
+          <Skeleton className="h-[300px] col-span-1 md:col-span-3 lg:col-span-3" />
+          <Skeleton className="h-[300px] col-span-1 md:col-span-3 lg:col-span-3" />
+        </div>
       </div>
     );
   }
 
-  if (!data) {
+  if (isError || !data) {
     return (
       <div className="flex h-[50vh] items-center justify-center text-muted-foreground">
-        Nenhum dado disponível.
+        Ocorreu um erro ao carregar os dados do dashboard.
       </div>
     );
   }

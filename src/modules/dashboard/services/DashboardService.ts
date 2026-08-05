@@ -77,10 +77,14 @@ export class DashboardService {
           investmentsTotal: investmentsResult?.data?.current_total_value || 0
         }
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching dashboard data:', JSON.stringify(error, null, 2));
-      toast.error(`Dashboard err: ${error?.message || JSON.stringify(error)}`);
-      return { error };
+      if (error instanceof Error) {
+        toast.error(`Dashboard err: ${error.message}`);
+        return { error: error.message };
+      }
+      toast.error('Dashboard err: Erro inesperado');
+      return { error: 'Ocorreu um erro inesperado.' };
     }
   }
 }

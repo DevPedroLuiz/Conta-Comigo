@@ -48,6 +48,10 @@ export class AuthRepository {
   async refreshSession() {
     return supabase.auth.refreshSession();
   }
+
+  async deleteAccount() {
+    return supabase.rpc('delete_user_account');
+  }
 }
 
 export const authRepository = new AuthRepository();

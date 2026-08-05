@@ -7,9 +7,12 @@ export class TransactionService {
     try {
       const data = await transactionRepository.getTransactions(filters);
       return { data, error: null };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error getting transactions:', error);
-      return { data: null, error };
+      if (error instanceof Error) {
+        return { data: null, error: { message: error.message } };
+      }
+      return { data: null, error: { message: 'Ocorreu um erro inesperado.' } };
     }
   }
 
@@ -17,9 +20,12 @@ export class TransactionService {
     try {
       const data = await transactionRepository.getTransactionById(userId, transactionId);
       return { data, error: null };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error getting transaction:', error);
-      return { data: null, error };
+      if (error instanceof Error) {
+        return { data: null, error: { message: error.message } };
+      }
+      return { data: null, error: { message: 'Ocorreu um erro inesperado.' } };
     }
   }
 
@@ -68,9 +74,12 @@ export class TransactionService {
         const created = await transactionRepository.createMultipleTransactions(transactionsToCreate);
         return { data: created[0], error: null }; // returning the first one as representative
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error creating transaction:', error);
-      return { data: null, error };
+      if (error instanceof Error) {
+        return { data: null, error: { message: error.message } };
+      }
+      return { data: null, error: { message: 'Ocorreu um erro inesperado.' } };
     }
   }
 
@@ -93,9 +102,12 @@ export class TransactionService {
       // Type casting because we use null instead of undefined for unset fields to clear them in db
       const updated = await transactionRepository.updateTransaction(userId, transactionId, updates as any);
       return { data: updated, error: null };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error updating transaction:', error);
-      return { data: null, error };
+      if (error instanceof Error) {
+        return { data: null, error: { message: error.message } };
+      }
+      return { data: null, error: { message: 'Ocorreu um erro inesperado.' } };
     }
   }
 
@@ -103,9 +115,12 @@ export class TransactionService {
     try {
       await transactionRepository.deleteTransaction(userId, transactionId);
       return { error: null };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error deleting transaction:', error);
-      return { error };
+      if (error instanceof Error) {
+        return { error: { message: error.message } };
+      }
+      return { error: { message: 'Ocorreu um erro inesperado.' } };
     }
   }
 
@@ -117,9 +132,12 @@ export class TransactionService {
         referenceRepository.getCreditCards(userId)
       ]);
       return { data: { accounts, categories, creditCards }, error: null };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching form references:', error);
-      return { data: null, error };
+      if (error instanceof Error) {
+        return { data: null, error: { message: error.message } };
+      }
+      return { data: null, error: { message: 'Ocorreu um erro inesperado.' } };
     }
   }
 }
