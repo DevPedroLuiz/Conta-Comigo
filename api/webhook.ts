@@ -99,7 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             type: type,
             description: pluggyTx.description || 'Transação Importada',
             amount: finalAmount,
-            date: pluggyTx.date.substring(0, 10), // Apenas 'YYYY-MM-DD'
+            date: new Date(pluggyTx.date).toISOString().substring(0, 10), // Apenas 'YYYY-MM-DD'
             pluggy_transaction_id: pluggyTx.id,
             status: pluggyTx.status || 'POSTED'
          };

@@ -6,6 +6,7 @@ import { Button } from '../components/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '../components/sheet';
 import { useTheme } from '../../providers/ThemeProvider';
+import { BottomNav } from '../components/BottomNav';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -34,10 +35,8 @@ export function MainLayout() {
       {/* Sidebar */}
       <aside className="w-64 border-r border-border bg-card hidden md:flex md:flex-col">
         <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(79,70,229,0.3)]">
-            <div className="w-4 h-4 border-2 border-white rounded-sm"></div>
-          </div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">Conta Comigo</h1>
+          <img src="/logo-contacomigo.jpeg" alt="Conta-Comigo Logo" className="h-8 w-8 rounded-lg object-cover shadow-sm" />
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">Conta-Comigo</h1>
         </div>
         
         <nav className="flex-1 px-4 space-y-1 mt-4">
@@ -76,10 +75,8 @@ export function MainLayout() {
               </SheetTrigger>
               <SheetContent side="left" className="p-0 w-64 bg-card">
                 <div className="p-6 flex items-center gap-3 border-b border-border">
-                  <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(79,70,229,0.3)]">
-                    <div className="w-4 h-4 border-2 border-white rounded-sm"></div>
-                  </div>
-                  <h1 className="text-lg font-semibold tracking-tight text-foreground">Conta Comigo</h1>
+                  <img src="/logo-contacomigo.jpeg" alt="Conta-Comigo Logo" className="h-8 w-8 rounded-lg object-cover shadow-sm" />
+                  <h1 className="text-lg font-semibold tracking-tight text-foreground">Conta-Comigo</h1>
                 </div>
                 <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto pb-4">
                   <div className="px-2 py-2 text-xs font-medium text-muted-foreground uppercase tracking-widest mb-2">Menu Principal</div>
@@ -104,7 +101,10 @@ export function MainLayout() {
                 </nav>
               </SheetContent>
             </Sheet>
-            <h1 className="text-xl font-semibold tracking-tight text-foreground">Conta Comigo</h1>
+            <div className="flex items-center gap-2">
+              <img src="/logo-contacomigo.jpeg" alt="Conta-Comigo Logo" className="h-7 w-7 rounded-md object-cover shadow-sm" />
+              <h1 className="text-xl font-semibold tracking-tight text-foreground">Conta-Comigo</h1>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
@@ -156,11 +156,12 @@ export function MainLayout() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-auto p-4 sm:p-8">
+        <div className="flex-1 overflow-auto p-4 sm:p-8 pb-24 md:pb-8">
           <div className="max-w-7xl mx-auto h-full">
             <Outlet />
           </div>
         </div>
+        <BottomNav />
       </main>
     </div>
   );

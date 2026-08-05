@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../../core/ui/components/dialog';
 import { Button } from '../../../core/ui/components/button';
 import { parseOFX, parseCSV, ParsedTransaction } from '../utils/ofxParser';
