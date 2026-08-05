@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { AccountList } from '../components/AccountList';
 import { AccountSummary } from '../components/AccountSummary';
 import { AccountEmptyState } from '../components/AccountEmptyState';
+import { OpenFinanceConnectionsCard } from '../components/OpenFinanceConnectionsCard';
 import { Spinner } from '../../../core/ui/components/spinner';
 import { toast } from 'sonner';
 
@@ -16,6 +17,7 @@ export function AccountsPage() {
   const navigate = useNavigate();
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const loadData = async () => {
     if (!user) return;
@@ -47,6 +49,18 @@ export function AccountsPage() {
     }
   };
 
+  const handleSync = async (itemId: string) => {
+    setIsSyncing(true);
+    // In a real implementation, you would call a service to sync Pluggy items here
+    // Example: await openFinanceService.syncItem(itemId);
+    
+    // Simulating sync time
+    setTimeout(() => {
+      setIsSyncing(false);
+      toast.success('Sincronização iniciada com sucesso!');
+    }, 1500);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -64,6 +78,13 @@ export function AccountsPage() {
       ) : summary ? (
         <>
           <AccountSummary summary={summary} />
+          
+          <OpenFinanceConnectionsCard 
+            accounts={summary.accounts} 
+            onSync={handleSync}
+            isSyncing={isSyncing}
+          />
+
           {summary.accountsCount === 0 ? (
             <AccountEmptyState />
           ) : (

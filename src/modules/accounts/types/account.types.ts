@@ -13,6 +13,8 @@ export interface Account {
   initial_balance: number;
   current_balance: number;
   currency: string;
+  pluggy_account_id?: string;
+  pluggy_item_id?: string;
   created_at?: string;
   updated_at?: string;
 }
