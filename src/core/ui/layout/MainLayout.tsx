@@ -1,10 +1,9 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Receipt, Wallet, Tags, Briefcase, Target, Settings, LogOut, BarChart3, Sun, Moon, Monitor, CreditCard, Repeat, Menu } from 'lucide-react';
+import { LayoutDashboard, Receipt, Wallet, Tags, Briefcase, Target, Settings, LogOut, BarChart3, Sun, Moon, Monitor, CreditCard, Repeat } from 'lucide-react';
 import { useAuth, useUser } from '../../../modules/auth/hooks/useAuth';
-import { Avatar, AvatarFallback, AvatarImage } from '../components/avatar';
+import { Avatar, AvatarFallback } from '../components/avatar';
 import { Button } from '../components/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/dropdown-menu';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '../components/sheet';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../components/dropdown-menu';
 import { useTheme } from '../../providers/ThemeProvider';
 import { BottomNav } from '../components/BottomNav';
 
@@ -63,53 +62,32 @@ export function MainLayout() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col bg-background">
-        {/* Mobile Header (Fallback) */}
+        {/* Mobile Header */}
         <header className="md:hidden border-b border-border bg-card px-4 h-16 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-64 bg-card">
-                <div className="p-6 flex items-center gap-3 border-b border-border">
-                  <img src="/logo-contacomigo.jpeg" alt="Conta-Comigo Logo" className="h-8 w-8 rounded-lg object-cover shadow-sm" />
-                  <h1 className="text-lg font-semibold tracking-tight text-foreground">Conta-Comigo</h1>
-                </div>
-                <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto pb-4">
-                  <div className="px-2 py-2 text-xs font-medium text-muted-foreground uppercase tracking-widest mb-2">Menu Principal</div>
-                  {navigation.map((item) => {
-                    const isActive = location.pathname.startsWith(item.href);
-                    return (
-                      <SheetClose asChild key={item.name}>
-                        <Link
-                          to={item.href}
-                          className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                            isActive 
-                              ? 'bg-card text-foreground' 
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                          }`}
-                        >
-                          <item.icon className="w-4 h-4" />
-                          {item.name}
-                        </Link>
-                      </SheetClose>
-                    );
-                  })}
-                </nav>
-              </SheetContent>
-            </Sheet>
-            <div className="flex items-center gap-2">
-              <img src="/logo-contacomigo.jpeg" alt="Conta-Comigo Logo" className="h-7 w-7 rounded-md object-cover shadow-sm" />
-              <h1 className="text-xl font-semibold tracking-tight text-foreground">Conta-Comigo</h1>
-            </div>
+          <div className="flex items-center gap-2">
+            <img src="/logo-contacomigo.jpeg" alt="Conta-Comigo Logo" className="h-7 w-7 rounded-md object-cover shadow-sm" />
+            <h1 className="text-xl font-semibold tracking-tight text-foreground">Conta-Comigo</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback>{initial}</AvatarFallback>
-            </Avatar>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="rounded-full outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback>{initial}</AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <div className="px-2 py-1.5 text-sm font-medium text-foreground">
+                  {userName}
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => logout()} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sair</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
         
@@ -145,13 +123,26 @@ export function MainLayout() {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <span className="text-sm text-muted-foreground">{userName}</span>
-                <Avatar className="h-8 w-8 border border-border">
-                  <AvatarFallback className="bg-card text-muted-foreground">{initial}</AvatarFallback>
-                </Avatar>
-                <Button variant="ghost" size="icon" onClick={() => logout()} className="text-muted-foreground hover:text-foreground ml-2">
-                  <LogOut className="h-4 w-4" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 rounded-full outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:opacity-80 transition-opacity">
+                      <span className="text-sm text-muted-foreground">{userName}</span>
+                      <Avatar className="h-8 w-8 border border-border">
+                        <AvatarFallback className="bg-card text-muted-foreground">{initial}</AvatarFallback>
+                      </Avatar>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <div className="px-2 py-1.5 text-sm font-medium text-foreground">
+                      {userName}
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => logout()} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sair</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
              </div>
           </div>
         </header>
