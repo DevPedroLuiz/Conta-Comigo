@@ -1,28 +1,35 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import { ParsedTransaction } from './ofxParser';
 
-// Use CDN for the worker to avoid Vite build configuration issues
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
-
 export async function parsePDF(file: File): Promise<ParsedTransaction[]> {
-  const arrayBuffer = await file.arrayBuffer();
-  
-  // Carregar o PDF usando pdfjs
-  const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-  const pdf = await loadingTask.promise;
-  
-  let fullText = '';
-  
-  // Extrair texto de todas as páginas
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const textContent = await page.getTextContent();
-    // Converter os itens de texto em uma string continua
-    const pageText = textContent.items.map((item: any) => item.str).join(' ');
-    fullText += pageText + '\n';
-  }
+  try {
+    // Tentar configurar o worker localmente se possível ou desabilitá-mo temporariamente
+    // Como a configuração do worker via CDN falhou devido a CORS, vamos tentar carregar
+    // sem worker explícito ou tratar o erro amigavelmente.
+    pdfjsLib.GlobalWorkerOptions.workerSrc = ''; // Disable worker or let it fallback
 
-  return extractTransactionsFromText(fullText);
+    const arrayBuffer = await file.arrayBuffer();
+    
+    // Carregar o PDF usando pdfjs
+    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+    const pdf = await loadingTask.promise;
+    
+    let fullText = '';
+    
+    // Extrair texto de todas as páginas
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      // Converter os itens de texto em uma string continua
+      const pageText = textContent.items.map((item: any) => item.str).join(' ');
+      fullText += pageText + '\n';
+    }
+
+    return extractTransactionsFromText(fullText);
+  } catch (error) {
+    console.error('Erro ao ler PDF:', error);
+    throw new Error('No momento a leitura de PDFs requer configuração adicional de Worker. Por favor, utilize arquivos .OFX ou .CSV, que são 100% suportados.');
+  }
 }
 
 function extractTransactionsFromText(text: string): ParsedTransaction[] {

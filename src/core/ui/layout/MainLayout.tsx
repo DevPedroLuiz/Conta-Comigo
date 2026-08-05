@@ -38,7 +38,7 @@ export function MainLayout() {
           <h1 className="text-lg font-semibold tracking-tight text-foreground">Conta-Comigo</h1>
         </div>
         
-        <nav className="flex-1 px-4 space-y-1 mt-4">
+        <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
            <div className="px-2 py-2 text-xs font-medium text-muted-foreground uppercase tracking-widest mb-2">Menu Principal</div>
            {navigation.map((item) => {
              const isActive = location.pathname.startsWith(item.href);
@@ -58,6 +58,16 @@ export function MainLayout() {
              );
            })}
         </nav>
+
+        <div className="p-4 border-t border-border mt-auto">
+          <button 
+            onClick={() => logout()}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-destructive hover:bg-destructive/10 transition-colors font-medium"
+          >
+            <LogOut className="w-4 h-4" />
+            Sair
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}

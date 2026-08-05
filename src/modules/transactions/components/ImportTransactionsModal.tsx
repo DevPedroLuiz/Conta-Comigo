@@ -108,7 +108,7 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
       toast.dismiss('processing-file');
       console.error(error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      toast.error(`Falha ao ler o arquivo: ${errorMessage}. Verifique se o formato é válido.`);
+      toast.error(errorMessage);
     } finally {
       setIsProcessingFile(false);
       // Limpar o input de arquivo para permitir selecionar o mesmo arquivo novamente

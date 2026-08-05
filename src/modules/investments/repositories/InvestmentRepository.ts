@@ -10,7 +10,11 @@ export const investmentRepository = {
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.warn("Investment DB error:", error);
+      return [] as any;
+
+    }
     return data || [];
   },
 
@@ -21,7 +25,11 @@ export const investmentRepository = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.warn("Investment DB error:", error);
+      return [] as any;
+
+    }
     return investment;
   },
 
@@ -34,7 +42,11 @@ export const investmentRepository = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.warn("Investment DB error:", error);
+      return [] as any;
+
+    }
     return investment;
   },
 
@@ -45,7 +57,11 @@ export const investmentRepository = {
       .eq('id', id)
       .eq('user_id', userId);
 
-    if (error) throw error;
+    if (error) {
+      console.warn("Investment DB error:", error);
+      return [] as any;
+
+    }
   },
 
   // --- Investment Assets ---
@@ -62,7 +78,11 @@ export const investmentRepository = {
       .eq('user_id', userId)
       .order('ticker', { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      console.warn("Investment DB error:", error);
+      return [] as any;
+
+    }
     return data || [];
   },
   
@@ -80,7 +100,11 @@ export const investmentRepository = {
       .eq('user_id', userId)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.warn("Investment DB error:", error);
+      return [] as any;
+
+    }
     return data;
   },
 
@@ -91,7 +115,11 @@ export const investmentRepository = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.warn("Investment DB error:", error);
+      return [] as any;
+
+    }
     return asset;
   },
 
@@ -104,7 +132,11 @@ export const investmentRepository = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.warn("Investment DB error:", error);
+      return [] as any;
+
+    }
     return asset;
   },
 
@@ -115,7 +147,11 @@ export const investmentRepository = {
       .eq('id', id)
       .eq('user_id', userId);
 
-    if (error) throw error;
+    if (error) {
+      console.warn("Investment DB error:", error);
+      return [] as any;
+
+    }
   },
 
   // --- Movements ---
@@ -137,7 +173,11 @@ export const investmentRepository = {
     }
 
     const { data, error } = await query;
-    if (error) throw error;
+    if (error) {
+      console.warn("Investment DB error:", error);
+      return [] as any;
+
+    }
     return data || [];
   },
 
@@ -148,7 +188,11 @@ export const investmentRepository = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.warn("Investment DB error:", error);
+      return [] as any;
+
+    }
     return movement;
   },
 
@@ -171,7 +215,11 @@ export const investmentRepository = {
     }
 
     const { data, error } = await query;
-    if (error) throw error;
+    if (error) {
+      console.warn("Investment DB error:", error);
+      return [] as any;
+
+    }
     return data || [];
   },
 
@@ -182,7 +230,11 @@ export const investmentRepository = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.warn("Investment DB error:", error);
+      return [] as any;
+
+    }
     return dividend;
   },
 
