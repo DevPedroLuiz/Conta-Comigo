@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../../core/ui/components/dialog';
 import { Button } from '../../../core/ui/components/button';
 import { parseOFX, parseCSV, ParsedTransaction } from '../utils/ofxParser';
+import { parsePDF } from '../utils/pdfParser';
 import { UploadCloud, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { transactionService } from '../services/TransactionService';
@@ -64,15 +65,18 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
   };
 
   const processFile = async (file: File) => {
-    const text = await file.text();
     try {
       let transactions: ParsedTransaction[] = [];
       if (file.name.toLowerCase().endsWith('.ofx')) {
+        const text = await file.text();
         transactions = parseOFX(text);
       } else if (file.name.toLowerCase().endsWith('.csv')) {
+        const text = await file.text();
         transactions = await parseCSV(text);
+      } else if (file.name.toLowerCase().endsWith('.pdf')) {
+        transactions = await parsePDF(file);
       } else {
-        toast.error('Formato não suportado. Envie um arquivo .ofx ou .csv.');
+        toast.error('Formato não suportado. Envie um arquivo .ofx, .csv ou .pdf.');
         return;
       }
       setParsedData(transactions);
@@ -136,7 +140,7 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
         <DialogHeader>
           <DialogTitle>Importar Transações</DialogTitle>
           <DialogDescription>
-            Faça upload de um arquivo .ofx ou .csv do seu banco para importar transações automaticamente.
+            Faça upload de um arquivo .ofx, .csv ou .pdf do seu banco para importar transações automaticamente. O PDF deve conter texto selecionável (não escaneado).
           </DialogDescription>
         </DialogHeader>
 
@@ -153,7 +157,7 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
             <input
               ref={fileInputRef}
               type="file"
-              accept=".ofx,.csv"
+              accept=".ofx,.csv,.pdf"
               className="hidden"
               onChange={handleChange}
             />
@@ -162,7 +166,7 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
               Arraste e solte seu arquivo aqui
             </p>
             <p className="text-xs text-muted-foreground text-center mb-4">
-              ou clique para selecionar do seu computador (OFX, CSV)
+              ou clique para selecionar do seu computador (OFX, CSV, PDF)
             </p>
             <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
               Selecionar Arquivo

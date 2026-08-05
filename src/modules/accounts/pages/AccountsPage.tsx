@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useUser } from '../../auth/hooks/useAuth';
 import { accountService } from '../services/AccountService';
+import { supabase } from '../../../core/services/supabase';
 import { Account, FinancialSummary } from '../types/account.types';
 import { Button } from '../../../core/ui/components/button';
 import { Plus } from 'lucide-react';
@@ -50,15 +51,47 @@ export function AccountsPage() {
   };
 
   const handleSync = async (itemId: string) => {
-    setIsSyncing(true);
-    // In a real implementation, you would call a service to sync Pluggy items here
-    // Example: await openFinanceService.syncItem(itemId);
+    if (!user) return;
     
-    // Simulating sync time
-    setTimeout(() => {
+    setIsSyncing(true);
+    try {
+      // Get the current session to get the access token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error('Usuário não autenticado.');
+        return;
+      }
+      
+      const response = await fetch('/api/sync-item', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ itemId })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Erro ao sincronizar.');
+      }
+
+      const result = await response.json();
+      toast.success(result.message || 'Sincronização concluída com sucesso!');
+      
+      // Reload accounts data to reflect new balance
+      loadData();
+    } catch (error: unknown) {
+      console.error('Erro na sincronização:', error);
+      if (error instanceof Error) {
+         toast.error(`Falha na sincronização: ${error.message}`);
+      } else {
+         toast.error('Falha na sincronização.');
+      }
+    } finally {
       setIsSyncing(false);
-      toast.success('Sincronização iniciada com sucesso!');
-    }, 1500);
+    }
   };
 
   return (
