@@ -33,7 +33,7 @@ export async function parsePDF(file: File): Promise<ParsedTransaction[]> {
   } catch (error) {
     console.error('Erro ao ler PDF:', error);
     if (error instanceof Error && error.message.includes('Worker')) {
-      throw new Error('Falha ao carregar o Worker do PDF.js. Tente novamente mais tarde ou use OFX/CSV.');
+      throw new Error('Falha ao carregar o Worker do PDF.js. Tente novamente mais tarde ou use OFX/CSV/PDF.');
     }
     throw new Error('O arquivo PDF parece ser inválido ou uma imagem escaneada. Certifique-se de que contém texto selecionável.');
   }
