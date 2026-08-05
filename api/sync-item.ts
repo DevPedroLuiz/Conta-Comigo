@@ -131,7 +131,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
          
          const type = isExpense ? 'EXPENSE' : 'INCOME';
          
-         const mappedStatus = pluggyTx.status === 'PENDING' ? 'PENDING' : 'COMPLETED';
+         const mappedStatus = pluggyTx.status === 'PENDING' ? 'UNPAID' : 'PAID';
          
          const newTx = {
             user_id: dbAccount.user_id,
