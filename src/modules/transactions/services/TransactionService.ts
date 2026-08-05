@@ -111,6 +111,19 @@ export class TransactionService {
     }
   }
 
+  async updateTransactionCategory(userId: string, transactionId: string, categoryId: string) {
+    try {
+      const updated = await transactionRepository.updateTransaction(userId, transactionId, { category_id: categoryId });
+      return { data: updated, error: null };
+    } catch (error: unknown) {
+      console.error('Error updating transaction category:', error);
+      if (error instanceof Error) {
+        return { data: null, error: { message: error.message } };
+      }
+      return { data: null, error: { message: 'Ocorreu um erro inesperado.' } };
+    }
+  }
+
   async deleteTransaction(userId: string, transactionId: string) {
     try {
       await transactionRepository.deleteTransaction(userId, transactionId);

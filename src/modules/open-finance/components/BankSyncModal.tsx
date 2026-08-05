@@ -48,6 +48,7 @@ export function BankSyncModal({ open, onOpenChange, onSyncComplete }: BankSyncMo
   }, [open, onOpenChange]);
 
   const handleSuccess = async (itemData: { item: { id: string } }) => {
+    console.log('[AUDITORIA] 1. Widget fechou. Item ID:', itemData.item.id);
     setIsSyncing(true);
     toast.info('Conexão realizada! Sincronizando seus dados...', { id: 'sync-status' });
     

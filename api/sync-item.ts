@@ -17,7 +17,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Missing itemId' });
   }
 
-  // Verificar o usuário autenticado através do Authorization header
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Unauthorized: Missing or invalid token' });
@@ -47,38 +46,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       clientSecret: PLUGGY_CLIENT_SECRET,
     });
 
-    // Option 1: Triggers an item update via Pluggy SDK (if available) and we fetch transactions immediately
-    // Or just fetch transactions assuming they are already updated
-    // According to Pluggy documentation, updateItem forces a sync if the item allows it.
-    // However, if it's already syncing we might just fetch the current ones.
-    
-    // As instructed: "Utilizar a PluggyClient para forçar a atualização ou buscar as transações atualizadas daquele item e salvá-las no Supabase (fazendo o mesmo upsert seguro que já usamos no webhook)."
-    
-    // Obter todas as contas associadas ao item atualizado
     const accountsResponse = await pluggyClient.fetchAccounts(itemId);
     const accounts = accountsResponse.results;
+    console.log('[AUDITORIA] 2. Contas recebidas da Pluggy:', accounts);
     
     let totalSynced = 0;
 
     for (const pluggyAccount of accounts) {
-      // Procurar a conta no Supabase usando o ID da Pluggy e confirmando que pertence ao usuário
+      const typeMapping: Record<string, string> = {
+        'CHECKING': 'CHECKING_ACCOUNT',
+        'SAVINGS': 'SAVINGS_ACCOUNT',
+        'CREDIT': 'CREDIT_CARD'
+      };
+      const accountType = typeMapping[pluggyAccount.type] || 'CHECKING_ACCOUNT';
+
+      const newAccount = {
+        user_id: user.id,
+        name: pluggyAccount.name || 'Conta Sincronizada',
+        type: accountType,
+        initial_balance: 0,
+        current_balance: pluggyAccount.balance || 0,
+        currency: pluggyAccount.currencyCode || 'BRL',
+        pluggy_account_id: pluggyAccount.id,
+        pluggy_item_id: itemId
+      };
+
       const { data: dbAccount, error: accountError } = await supabase
         .from('accounts')
+        .upsert(newAccount, { onConflict: 'pluggy_account_id' })
         .select('id, user_id')
-        .eq('pluggy_account_id', pluggyAccount.id)
-        .eq('user_id', user.id)
         .single();
 
       if (accountError || !dbAccount) {
-        console.warn(`Account ${pluggyAccount.id} not found in database for user ${user.id}. Skipping.`);
+        console.error(`Erro ao inserir/atualizar conta ${pluggyAccount.id}:`, accountError);
         continue;
       }
 
-      // Buscar transações da conta na Pluggy
       const transactionsResponse = await pluggyClient.fetchTransactions(pluggyAccount.id);
       const transactions = transactionsResponse.results;
 
-      // Buscar a categoria padrão
       const { data: defaultCategory } = await supabase
         .from('categories')
         .select('id')
@@ -119,6 +125,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
          }
       }
     }
+
+    console.log('[AUDITORIA] 3. Inserção no Supabase concluída');
 
     return res.status(200).json({ success: true, message: `Sincronização concluída. ${totalSynced} transações processadas.` });
 
