@@ -1,1 +1,1 @@
-O processo de sincronização e detecção de padrões de assinatura foi finalizado e os erros de TypeScript foram resolvidos.
+O botão de conexão com o banco foi movido para o canto superior direito.

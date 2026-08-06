@@ -4,7 +4,7 @@ import { accountService } from '../services/AccountService';
 import { supabase } from '../../../core/services/supabase';
 import { Account, FinancialSummary } from '../types/account.types';
 import { Button } from '../../../core/ui/components/button';
-import { Plus } from 'lucide-react';
+import { Plus, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AccountList } from '../components/AccountList';
 import { AccountSummary } from '../components/AccountSummary';
@@ -14,6 +14,7 @@ import { Spinner } from '../../../core/ui/components/spinner';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { AnimatedInteraction } from '../../../core/ui/components/AnimatedInteraction';
+import { BankSyncModal } from '../../open-finance/components/BankSyncModal';
 
 export function AccountsPage() {
   const user = useUser();
@@ -22,6 +23,7 @@ export function AccountsPage() {
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
 
   const loadData = async () => {
     if (!user) return;
@@ -107,12 +109,20 @@ export function AccountsPage() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Minhas Contas</h2>
-        <AnimatedInteraction>
-          <Button onClick={() => navigate('/accounts/new')}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Conta
-          </Button>
-        </AnimatedInteraction>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <AnimatedInteraction>
+            <Button variant="outline" onClick={() => setIsSyncModalOpen(true)} className="w-full sm:w-auto">
+              <Zap className="mr-2 h-4 w-4 text-indigo-500" />
+              Conectar Banco
+            </Button>
+          </AnimatedInteraction>
+          <AnimatedInteraction>
+            <Button onClick={() => navigate('/accounts/new')} className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Conta
+            </Button>
+          </AnimatedInteraction>
+        </div>
       </div>
 
       {loading ? (
@@ -138,6 +148,19 @@ export function AccountsPage() {
       ) : (
         <AccountEmptyState />
       )}
+      <BankSyncModal 
+        open={isSyncModalOpen} 
+        onOpenChange={setIsSyncModalOpen}
+        onSyncComplete={() => {
+          loadData();
+          queryClient.invalidateQueries({ queryKey: ['accounts'] });
+          queryClient.invalidateQueries({ queryKey: ['transactions'] });
+          queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+          queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
+          queryClient.invalidateQueries({ queryKey: ['investments'] });
+          queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+        }}
+      />
     </div>
   );
 }
