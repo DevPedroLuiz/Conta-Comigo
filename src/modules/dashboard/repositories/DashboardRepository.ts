@@ -42,27 +42,12 @@ export class DashboardRepository {
   async getCurrentBalance(userId: string): Promise<number> {
     const { data: accounts, error } = await supabase
       .from('accounts')
-      .select('initial_balance')
+      .select('current_balance')
       .eq('user_id', userId);
 
     if (error) throw error;
     
-    const initialBalances = accounts?.reduce((acc, account) => acc + (Number(account.initial_balance) || 0), 0) || 0;
-
-    const { data: transactions, error: txError } = await supabase
-      .from('transactions')
-      .select('amount, type')
-      .eq('user_id', userId);
-
-    if (txError) throw txError;
-
-    const txBalance = transactions?.reduce((acc, tx) => {
-      if (tx.type === 'INCOME' || tx.type === 'TRANSFER_IN') return acc + Number(tx.amount);
-      if (tx.type === 'EXPENSE' || tx.type === 'TRANSFER_OUT') return acc - Number(tx.amount);
-      return acc;
-    }, 0) || 0;
-
-    return initialBalances + txBalance;
+    return accounts?.reduce((acc, account) => acc + (Number(account.current_balance) || 0), 0) || 0;
   }
 
   async getMonthlyIncome(userId: string, startDate: string, endDate: string): Promise<number> {

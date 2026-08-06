@@ -78,11 +78,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if (isCreditCard) {
         // Upsert no credit_cards
-        const creditData = pluggyAccount.creditData || {};
+        const creditData: any = pluggyAccount.creditData || {};
         
-        // Padrão para fallback
-        const closingDay = creditData.balanceCloseDate ? new Date(creditData.balanceCloseDate).getDate() : 1;
-        const dueDay = creditData.balanceDueDate ? new Date(creditData.balanceDueDate).getDate() : 10;
+        let closingDay = 1;
+        if (creditData.balanceCloseDate) {
+          const parsed = new Date(creditData.balanceCloseDate).getDate();
+          if (!isNaN(parsed)) closingDay = parsed;
+        }
+
+        let dueDay = 10;
+        if (creditData.balanceDueDate) {
+          const parsed = new Date(creditData.balanceDueDate).getDate();
+          if (!isNaN(parsed)) dueDay = parsed;
+        }
         
         const newCreditCard = {
           user_id: user.id,
@@ -109,11 +117,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         
         targetCreditCardId = dbCard.id;
       } else {
-        const typeMapping: Record<string, string> = {
-          'CHECKING': 'CHECKING_ACCOUNT',
-          'SAVINGS': 'SAVINGS_ACCOUNT',
+        const subtypeMapping: Record<string, string> = {
+          'CHECKING_ACCOUNT': 'CHECKING_ACCOUNT',
+          'SAVINGS_ACCOUNT': 'SAVINGS_ACCOUNT',
         };
-        const accountType = typeMapping[pluggyAccount.type] || 'CHECKING_ACCOUNT';
+        const accountType = subtypeMapping[pluggyAccount.subtype] || 'CHECKING_ACCOUNT';
 
         const newAccount = {
           user_id: user.id,
@@ -158,7 +166,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .from('categories')
         .select('id')
         .eq('user_id', user.id)
-        .eq('type', 'EXPENSE')
+        .in('name', ['Outros', 'Sem Categoria'])
         .limit(1)
         .single();
 

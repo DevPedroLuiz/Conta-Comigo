@@ -56,7 +56,7 @@ export function TransactionsPage() {
 
     // Filter transactions that need categorization (No category or "Outros")
     const toCategorize = transactions.filter(
-      (t) => !t.category_id || t.categories?.name === 'Outros' || t.categories?.name === 'Sem Categoria'
+      (t) => !t.category_id || t.category_id === null || t.category_id === 'null' || t.categories?.name === 'Outros' || t.categories?.name === 'Sem Categoria'
     );
 
     if (toCategorize.length === 0) {
@@ -78,7 +78,7 @@ export function TransactionsPage() {
       }
 
       // Unique descriptions to save API tokens
-      const uniqueDescriptions = Array.from(new Set(toCategorize.map((t) => t.description)));
+      const uniqueDescriptions: string[] = Array.from(new Set(toCategorize.map((t) => t.description)));
       
       const mapping = await categorizeTransactions(
         uniqueDescriptions, 

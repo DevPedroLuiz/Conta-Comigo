@@ -83,7 +83,7 @@ export function CreditCardsPage() {
                     {new Intl.NumberFormat('pt-BR', {
                       style: 'currency',
                       currency: 'BRL',
-                    }).format(card.limit)}
+                    }).format(card.limit || 0)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">

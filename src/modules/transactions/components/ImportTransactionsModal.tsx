@@ -229,7 +229,7 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Conta de Destino</Label>
-                <Select value={selectedAccountId} onValueChange={setSelectedAccountId} disabled={isLoadingForm || accounts.length === 0}>
+                <Select value={selectedAccountId} onValueChange={setSelectedAccountId} disabled={isLoadingForm}>
                   <SelectTrigger>
                     <SelectValue placeholder={isLoadingForm ? "Carregando contas..." : "Selecione uma conta"} />
                   </SelectTrigger>
@@ -247,7 +247,7 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
 
               <div className="space-y-2">
                 <Label>Categoria Padrão</Label>
-                <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId} disabled={isLoadingForm || categories.length === 0}>
+                <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId} disabled={isLoadingForm}>
                   <SelectTrigger>
                     <SelectValue placeholder={isLoadingForm ? "Carregando categorias..." : "Selecione a categoria"} />
                   </SelectTrigger>
