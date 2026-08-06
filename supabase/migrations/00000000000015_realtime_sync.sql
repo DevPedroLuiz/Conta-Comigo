@@ -46,17 +46,36 @@ FOR EACH ROW EXECUTE FUNCTION log_transaction_event();
 -- ==========================================
 -- 3. Habilitar o Broadcast APENAS na Tabela de Eventos
 -- ==========================================
--- Removemos a tabela transactions original do realtime (caso estivesse)
--- e adicionamos apenas a tabela de eventos anonimizada.
-BEGIN;
-  -- Fallback seguro caso a transactions estivesse na publication
-  ALTER PUBLICATION supabase_realtime DROP TABLE transactions;
-EXCEPTION
-  WHEN undefined_object THEN
-    -- Ignora se não estivesse
-END;
+-- Removemos a tabela transactions original do realtime (caso estivesse) de forma segura
+-- e adicionamos apenas a tabela de eventos.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 
+        FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+          AND schemaname = 'public' 
+          AND tablename = 'transactions'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime DROP TABLE public.transactions;
+    END IF;
+END
+$$;
 
-ALTER PUBLICATION supabase_realtime ADD TABLE transaction_events;
+-- Garante que a tabela de eventos está na publication (idempotente)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+          AND schemaname = 'public' 
+          AND tablename = 'transaction_events'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.transaction_events;
+    END IF;
+END
+$$;
 
 -- ==========================================
 -- 4. Função de Limpeza (Opcional, para não inchar o BD)
