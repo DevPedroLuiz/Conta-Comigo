@@ -16,7 +16,8 @@ EXCEPTION WHEN OTHERS THEN
     -- Ignore if error
 END $$;
 
-ALTER TABLE transactions ADD CONSTRAINT transactions_type_check CHECK (type IN ('INCOME', 'EXPENSE', 'TRANSFER_IN', 'TRANSFER_OUT', 'income', 'expense', 'transfer_in', 'transfer_out'));
+ALTER TABLE transactions DROP CONSTRAINT IF EXISTS transactions_type_check;
+ALTER TABLE transactions ADD CONSTRAINT transactions_type_check CHECK (type IN ('INCOME', 'EXPENSE', 'TRANSFER_IN', 'TRANSFER_OUT'));
 
 -- Create Investments (Brokers/Wallets)
 CREATE TABLE IF NOT EXISTS investments (

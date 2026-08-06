@@ -11,8 +11,8 @@ const PLUGGY_CLIENT_SECRET = process.env.VITE_PLUGGY_CLIENT_SECRET;
 
 // Zod Schema for Webhook Payload
 const WebhookPayloadSchema = z.object({
-  event: z.string({ required_error: 'Event is required' }),
-  itemId: z.string({ required_error: 'itemId is required' }),
+  event: z.string({ message: 'Event is required' }),
+  itemId: z.string({ message: 'itemId is required' }),
 }).passthrough(); // allows other fields but requires these
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -67,7 +67,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Procurar a conta no Supabase usando o ID da Pluggy
       const { data: dbAccount, error: accountError } = await supabase
         .from('accounts')
-        .select('id, user_id')
+        .select('id, user_id, type')
         .eq('pluggy_account_id', pluggyAccount.id)
         .single();
 
@@ -102,7 +102,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
          
          // A regra do nosso banco exige amount > 0, e type como 'INCOME' ou 'EXPENSE'.
          // Na Pluggy, despesas são valores negativos e receitas valores positivos.
-         const isExpense = amountValue < 0;
+         const isCreditCard = dbAccount.type === 'CREDIT_CARD' || dbAccount.type === 'credit_card';
+         let isExpense = amountValue < 0;
+         if (isCreditCard) {
+            isExpense = amountValue > 0;
+         }
          const finalAmount = Math.abs(amountValue);
          
          // Prevenindo inserir amount 0 se houver restrição

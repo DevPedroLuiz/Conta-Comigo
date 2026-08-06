@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const transactionSchema = z.object({
-  type: z.enum(['INCOME', 'EXPENSE']),
+  type: z.preprocess((val) => typeof val === 'string' ? val.toUpperCase() : val, z.enum(['INCOME', 'EXPENSE', 'TRANSFER_IN', 'TRANSFER_OUT'])),
   description: z.string().min(3, 'A descrição deve ter pelo menos 3 caracteres'),
   amount: z.coerce.number().positive('O valor deve ser maior que zero'),
   category_id: z.string().min(1, 'A categoria é obrigatória'),

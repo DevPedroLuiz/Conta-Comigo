@@ -206,6 +206,69 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
+    console.log("[AUDITORIA] 4. Sincronizando Investimentos");
+    const investmentsResponse = await fetch(`https://api.pluggy.ai/investments?itemId=${itemId}`, {
+      headers: { "X-API-KEY": pluggyApiKey }
+    });
+    if (investmentsResponse.ok) {
+      const investmentsData = await investmentsResponse.json();
+      if (investmentsData.results) {
+        for (const inv of investmentsData.results) {
+          let type = "STOCK";
+          if (inv.type === "FIXED_INCOME") type = "CDB";
+          else if (inv.type === "MUTUAL_FUND") type = "FII";
+          const ticker = inv.code || inv.name || `INV-${inv.id.substring(0,6)}`;
+          const quantity = inv.quantity || 1;
+          const currentPrice = inv.value || inv.balance || 0;
+          const averagePrice = (inv.value || inv.balance || 0) / quantity;
+          const { error: invError } = await supabase
+            .from("investment_assets")
+            .upsert({
+              user_id: user.id,
+              ticker: ticker,
+              name: inv.name || "Investimento Sincronizado",
+              type: type,
+              quantity: quantity,
+              average_price: averagePrice,
+              current_price: currentPrice,
+              updated_at: new Date().toISOString()
+            }, { onConflict: "user_id,ticker" });
+          if (invError) console.error(`Erro ao inserir investimento ${ticker}:`, invError);
+        }
+      }
+    }
+    console.log("[AUDITORIA] 5. Detectando Assinaturas");
+    const { data: recentTxs } = await supabase
+      .from("transactions")
+      .select("description, amount, type")
+      .eq("user_id", user.id)
+      .eq("type", "EXPENSE")
+      .order("date", { ascending: false })
+      .limit(100);
+    if (recentTxs) {
+      const frequencyMap = new Map();
+      recentTxs.forEach(tx => {
+        const key = `${tx.description}-${tx.amount}`;
+        frequencyMap.set(key, (frequencyMap.get(key) || 0) + 1);
+      });
+      for (const [key, count] of frequencyMap.entries()) {
+        if (count >= 2) {
+          const [description, amountStr] = key.split("-");
+          const amount = parseFloat(amountStr);
+          await supabase
+            .from("subscriptions")
+            .upsert({
+              user_id: user.id,
+              name: description,
+              amount: amount,
+              frequency: "MONTHLY",
+              status: "ACTIVE",
+              due_day: 1
+            }, { onConflict: "user_id,name" });
+        }
+      }
+    }
+
     console.log('[AUDITORIA] 3. Inserção no Supabase concluída');
 
     return res.status(200).json({ success: true, message: `Sincronização concluída. ${totalSynced} transações processadas.` });

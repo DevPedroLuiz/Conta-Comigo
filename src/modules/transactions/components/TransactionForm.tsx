@@ -7,24 +7,35 @@ import { Label } from '../../../core/ui/components/label';
 import { Textarea } from '../../../core/ui/components/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../core/ui/components/select';
 import { RadioGroup, RadioGroupItem } from '../../../core/ui/components/radio-group';
-import { ArrowDownCircle, ArrowUpCircle, Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ArrowDownCircle, ArrowUpCircle, Sparkles, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { suggestCategory } from '../utils/categoryMatcher';
+import { useCreateTransaction } from '../hooks/useCreateTransaction';
 
 interface TransactionFormProps {
   initialData?: TransactionFormData;
   accounts: { id: string; name: string }[];
   categories: { id: string; name: string; type: string }[];
   creditCards?: { id: string; name: string }[];
-  onSubmit: (data: TransactionFormData) => Promise<void>;
-  isLoading: boolean;
+  onSubmit?: (data: TransactionFormData) => Promise<void>;
+  onCancel?: () => void;
+  isLoading?: boolean;
 }
 
-export function TransactionForm({ initialData, accounts, categories, creditCards = [], onSubmit, isLoading }: TransactionFormProps) {
-  const navigate = useNavigate();
+export function TransactionForm({ 
+  initialData, 
+  accounts, 
+  categories, 
+  creditCards = [], 
+  onSubmit, 
+  onCancel,
+  isLoading 
+}: TransactionFormProps) {
   const [sourceType, setSourceType] = useState<'account' | 'credit_card'>(initialData?.credit_card_id ? 'credit_card' : 'account');
   const [aiSuggested, setAiSuggested] = useState(false);
+  const { mutateAsync: createTransaction, isPending: isCreating } = useCreateTransaction();
+
+  const isMutating = isLoading || isCreating;
 
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema) as unknown as any,
@@ -43,7 +54,6 @@ export function TransactionForm({ initialData, accounts, categories, creditCards
   const categoryId = watch('category_id');
   const creditCardId = watch('credit_card_id');
   
-  // Filter categories by type
   const filteredCategories = categories.filter(c => c.type === type || !c.type);
 
   const handleSourceChange = (val: 'account' | 'credit_card') => {
@@ -57,76 +67,93 @@ export function TransactionForm({ initialData, accounts, categories, creditCards
     }
   };
 
+  const handleFormSubmit = async (data: TransactionFormData) => {
+    if (onSubmit) {
+      await onSubmit(data);
+    } else {
+      await createTransaction(data);
+      if (onCancel) onCancel(); // Fechar modal em caso de sucesso
+    }
+  };
+
+  const inputStyles = "rounded-sm border-zinc-200 dark:border-zinc-800 focus-visible:ring-indigo-500";
+  const errorStyles = "text-sm font-medium text-rose-500 dark:text-rose-400 mt-1";
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="space-y-3">
-        <Label>Tipo de Transação</Label>
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">
+      <div className="space-y-2">
+        <Label className="text-zinc-700 dark:text-zinc-300">Tipo de Transação</Label>
         <RadioGroup
           defaultValue={type}
           onValueChange={(val) => {
             setValue('type', val as 'INCOME' | 'EXPENSE');
-            setValue('category_id', ''); // reset category on type change
+            setValue('category_id', '');
             setAiSuggested(false);
             if (val === 'INCOME') handleSourceChange('account');
           }}
-          className="grid grid-cols-2 gap-4"
+          className="grid grid-cols-2 gap-3"
         >
           <div>
-            <RadioGroupItem value="INCOME" id="income" className="peer sr-only" />
+            <RadioGroupItem value="INCOME" id="income" className="peer sr-only" aria-label="Receita" />
             <Label
               htmlFor="income"
-              className="flex flex-col items-center justify-between rounded-md border-2 border-border bg-transparent p-4 hover:bg-muted/50 hover:text-muted-foreground peer-data-[state=checked]:border-emerald-500 [&:has([data-state=checked])]:border-emerald-500 cursor-pointer"
+              className="flex flex-col items-center justify-between rounded-sm border border-zinc-200 dark:border-zinc-800 bg-transparent p-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 peer-data-[state=checked]:border-emerald-500 peer-data-[state=checked]:bg-emerald-50 dark:peer-data-[state=checked]:bg-emerald-950/20 cursor-pointer transition-colors"
             >
-              <ArrowUpCircle className="mb-3 h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-              Receita
+              <ArrowUpCircle className="mb-2 h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Receita</span>
             </Label>
           </div>
           <div>
-            <RadioGroupItem value="EXPENSE" id="expense" className="peer sr-only" />
+            <RadioGroupItem value="EXPENSE" id="expense" className="peer sr-only" aria-label="Despesa" />
             <Label
               htmlFor="expense"
-              className="flex flex-col items-center justify-between rounded-md border-2 border-border bg-transparent p-4 hover:bg-muted/50 hover:text-muted-foreground peer-data-[state=checked]:border-destructive [&:has([data-state=checked])]:border-destructive cursor-pointer"
+              className="flex flex-col items-center justify-between rounded-sm border border-zinc-200 dark:border-zinc-800 bg-transparent p-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 peer-data-[state=checked]:border-rose-500 peer-data-[state=checked]:bg-rose-50 dark:peer-data-[state=checked]:bg-rose-950/20 cursor-pointer transition-colors"
             >
-              <ArrowDownCircle className="mb-3 h-6 w-6 text-destructive dark:text-red-400" />
-              Despesa
+              <ArrowDownCircle className="mb-2 h-5 w-5 text-rose-600 dark:text-rose-400" />
+              <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Despesa</span>
             </Label>
           </div>
         </RadioGroup>
-        {errors.type && <p className="text-sm text-destructive dark:text-red-400">{errors.type.message}</p>}
+        {errors.type && <p className={errorStyles} role="alert">{errors.type.message}</p>}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="amount">Valor</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="amount" className="text-zinc-700 dark:text-zinc-300">Valor</Label>
           <div className="relative">
-            <span className="absolute left-3 top-2.5 text-muted-foreground">R$</span>
+            <span className="absolute left-3 top-2.5 text-zinc-500 dark:text-zinc-400 font-medium">R$</span>
             <Input
               id="amount"
               type="number"
               step="0.01"
-              className="pl-9"
-              placeholder="0,00"
+              className={`pl-9 ${inputStyles}`}
+              placeholder="0.00"
+              aria-invalid={!!errors.amount}
               {...register('amount')}
             />
           </div>
-          {errors.amount && <p className="text-sm text-destructive dark:text-red-400">{errors.amount.message}</p>}
+          {errors.amount && <p className={errorStyles} role="alert">{errors.amount.message}</p>}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="date">Data</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="date" className="text-zinc-700 dark:text-zinc-300">Data</Label>
           <Input
             id="date"
             type="date"
+            className={inputStyles}
+            aria-invalid={!!errors.date}
             {...register('date')}
           />
-          {errors.date && <p className="text-sm text-destructive dark:text-red-400">{errors.date.message}</p>}
+          {errors.date && <p className={errorStyles} role="alert">{errors.date.message}</p>}
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="description">Descrição</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="description" className="text-zinc-700 dark:text-zinc-300">Descrição</Label>
         <Input
           id="description"
           placeholder="Ex: Supermercado"
+          className={inputStyles}
+          aria-invalid={!!errors.description}
           {...register('description')}
           onBlur={(e) => {
             const desc = e.target.value;
@@ -139,15 +166,15 @@ export function TransactionForm({ initialData, accounts, categories, creditCards
             }
           }}
         />
-        {errors.description && <p className="text-sm text-destructive dark:text-red-400">{errors.description.message}</p>}
+        {errors.description && <p className={errorStyles} role="alert">{errors.description.message}</p>}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label>Origem</Label>
+        <div className="space-y-1.5">
+          <Label className="text-zinc-700 dark:text-zinc-300">Origem</Label>
           {type === 'EXPENSE' ? (
             <Select value={sourceType} onValueChange={handleSourceChange}>
-              <SelectTrigger>
+              <SelectTrigger className={inputStyles} aria-label="Origem">
                 <SelectValue placeholder="Conta ou Cartão" />
               </SelectTrigger>
               <SelectContent>
@@ -157,7 +184,7 @@ export function TransactionForm({ initialData, accounts, categories, creditCards
             </Select>
           ) : (
             <Select value="account" disabled>
-              <SelectTrigger>
+              <SelectTrigger className={inputStyles}>
                 <SelectValue placeholder="Conta Bancária" />
               </SelectTrigger>
             </Select>
@@ -165,13 +192,13 @@ export function TransactionForm({ initialData, accounts, categories, creditCards
         </div>
 
         {sourceType === 'account' ? (
-          <div className="space-y-2">
-            <Label>Conta Bancária</Label>
+          <div className="space-y-1.5">
+            <Label className="text-zinc-700 dark:text-zinc-300">Conta Bancária</Label>
             <Select 
               value={accountId} 
               onValueChange={(val) => setValue('account_id', val)}
             >
-              <SelectTrigger>
+              <SelectTrigger className={inputStyles} aria-invalid={!!errors.account_id} aria-label="Conta bancária">
                 <SelectValue placeholder="Selecione uma conta" />
               </SelectTrigger>
               <SelectContent>
@@ -180,16 +207,16 @@ export function TransactionForm({ initialData, accounts, categories, creditCards
                 ))}
               </SelectContent>
             </Select>
-            {errors.account_id && <p className="text-sm text-destructive dark:text-red-400">{errors.account_id.message}</p>}
+            {errors.account_id && <p className={errorStyles} role="alert">{errors.account_id.message}</p>}
           </div>
         ) : (
-          <div className="space-y-2">
-            <Label>Cartão de Crédito</Label>
+          <div className="space-y-1.5">
+            <Label className="text-zinc-700 dark:text-zinc-300">Cartão de Crédito</Label>
             <Select 
               value={creditCardId} 
               onValueChange={(val) => setValue('credit_card_id', val)}
             >
-              <SelectTrigger>
+              <SelectTrigger className={inputStyles} aria-invalid={!!errors.credit_card_id} aria-label="Cartão de crédito">
                 <SelectValue placeholder="Selecione um cartão" />
               </SelectTrigger>
               <SelectContent>
@@ -198,17 +225,17 @@ export function TransactionForm({ initialData, accounts, categories, creditCards
                 ))}
               </SelectContent>
             </Select>
-            {errors.credit_card_id && <p className="text-sm text-destructive dark:text-red-400">{errors.credit_card_id.message}</p>}
+            {errors.credit_card_id && <p className={errorStyles} role="alert">{errors.credit_card_id.message}</p>}
           </div>
         )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label>Categoria</Label>
+            <Label className="text-zinc-700 dark:text-zinc-300">Categoria</Label>
             {aiSuggested && (
-              <span className="flex items-center gap-1 text-xs font-medium text-purple-600 dark:text-purple-400">
+              <span className="flex items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-400">
                 <Sparkles className="h-3 w-3" />
                 Sugerida
               </span>
@@ -221,7 +248,7 @@ export function TransactionForm({ initialData, accounts, categories, creditCards
               setAiSuggested(false);
             }}
           >
-            <SelectTrigger>
+            <SelectTrigger className={inputStyles} aria-invalid={!!errors.category_id} aria-label="Categoria">
               <SelectValue placeholder="Selecione uma categoria" />
             </SelectTrigger>
             <SelectContent>
@@ -230,43 +257,54 @@ export function TransactionForm({ initialData, accounts, categories, creditCards
               ))}
             </SelectContent>
           </Select>
-          {errors.category_id && <p className="text-sm text-destructive dark:text-red-400">{errors.category_id.message}</p>}
+          {errors.category_id && <p className={errorStyles} role="alert">{errors.category_id.message}</p>}
         </div>
         
         {sourceType === 'credit_card' && (
-          <div className="space-y-2">
-            <Label htmlFor="installments">Parcelas</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="installments" className="text-zinc-700 dark:text-zinc-300">Parcelas</Label>
             <Input
               id="installments"
               type="number"
               min="1"
               placeholder="1"
+              className={inputStyles}
+              aria-invalid={!!errors.installments}
               {...register('installments')}
             />
           </div>
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="notes">Observações</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="notes" className="text-zinc-700 dark:text-zinc-300">Observações</Label>
         <Textarea
           id="notes"
           placeholder="Opcional"
+          className={`min-h-[80px] resize-none ${inputStyles}`}
           {...register('notes')}
         />
       </div>
 
-      <div className="flex gap-4 justify-end">
+      <div className="flex gap-3 justify-end pt-2">
+        {onCancel && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+            disabled={isMutating}
+            className="rounded-sm border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+          >
+            Cancelar
+          </Button>
+        )}
         <Button 
-          type="button" 
-          variant="outline" 
-          onClick={() => navigate('/transactions')}
-          disabled={isLoading}
+          type="submit" 
+          disabled={isMutating}
+          className="rounded-sm bg-indigo-600 hover:bg-indigo-700 text-white"
         >
-          Cancelar
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : 'Salvar Transação'}
+          {isMutating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isMutating ? 'Salvando...' : 'Salvar Transação'}
         </Button>
       </div>
     </form>

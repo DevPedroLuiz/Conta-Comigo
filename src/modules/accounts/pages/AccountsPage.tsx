@@ -88,6 +88,8 @@ export function AccountsPage() {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
+      queryClient.invalidateQueries({ queryKey: ['investments'] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
     } catch (error: unknown) {
       console.error('Erro na sincronização:', error);
       if (error instanceof Error) {
