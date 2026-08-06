@@ -73,16 +73,12 @@ export class CreditCardsService {
     try {
       const card = await creditCardsRepository.getCreditCardById(userId, creditCardId);
       if (!card) throw new Error('Credit card not found');
-
       const transactions = await creditCardsRepository.getCardTransactions(creditCardId);
       
-      // Group transactions by invoice month/year
       const invoiceTotals: Record<string, number> = {};
       
       for (const tx of transactions) {
-        // Expense adds to invoice, Income (e.g. refund) reduces
         const amount = tx.type === 'EXPENSE' ? tx.amount : -tx.amount;
-        
         const txDate = new Date(tx.date + 'T00:00:00');
         let month = txDate.getMonth() + 1;
         let year = txDate.getFullYear();
@@ -116,8 +112,8 @@ export class CreditCardsService {
       }
       
       existingInvoices = existingInvoices.sort((a, b) => {
-        if (a.year !== b.year) return b.year - a.year;
-        return b.month - a.month;
+        if (a.year !== b.year) return a.year - b.year;
+        return a.month - b.month; // Month ascending
       });
       
       const invoiceIds = existingInvoices.map(i => i.id);
@@ -126,13 +122,14 @@ export class CreditCardsService {
       
       const data = existingInvoices.map(inv => {
         const key = `${inv.year}-${inv.month}`;
+        // Support either legacy payments or the new status column
+        const isPaid = (inv as any).status === 'PAID' || paidInvoiceIds.has(inv.id);
         return {
           ...inv,
           total_amount: invoiceTotals[key] || 0,
-          status: paidInvoiceIds.has(inv.id) ? 'PAID' : 'OPEN'
+          status: isPaid ? 'PAID' : 'OPEN'
         };
       });
-
       return { data, error: null };
     } catch (error) {
       console.error('Error fetching invoices:', error);
@@ -143,30 +140,40 @@ export class CreditCardsService {
   async payInvoice(userId: string, invoiceId: string, accountId: string, amount: number, date: string) {
     try {
       const { supabase } = await import('../../../core/services/supabase');
-      // Fetch a generic expense category or create one if none exists
       let { data: cat } = await supabase.from('categories').select('id').eq('type', 'EXPENSE').eq('user_id', userId).limit(1).single();
       if (!cat) {
         let { data: defaultCat } = await supabase.from('categories').select('id').eq('type', 'EXPENSE').eq('is_default', true).limit(1).single();
         cat = defaultCat;
       }
       const categoryId = cat?.id;
-
       const { data: transaction, error: txError } = await import('../../transactions/services/TransactionService').then(m => m.transactionService.createTransaction(userId, {
         type: 'EXPENSE',
-        amount,
+        amount: Math.abs(amount), // Ensure positive value
         description: 'Pagamento de Fatura',
         category_id: categoryId as string,
         account_id: accountId,
         date,
         status: 'PAID'
       } as any));
-
       if (txError || !transaction) throw txError || new Error('Transaction creation failed');
-
       await creditCardsRepository.payInvoice(invoiceId, transaction.id);
+      
+      // Update status column too
+      await creditCardsRepository.updateInvoiceStatus(invoiceId, 'PAID');
       return { error: null };
     } catch (error) {
       console.error('Error paying invoice:', error);
+      return { error };
+    }
+  }
+
+  async toggleInvoiceStatus(invoiceId: string, currentStatus: 'OPEN' | 'PAID') {
+    try {
+      const newStatus = currentStatus === 'PAID' ? 'OPEN' : 'PAID';
+      await creditCardsRepository.updateInvoiceStatus(invoiceId, newStatus);
+      return { error: null };
+    } catch (error) {
+      console.error('Error toggling invoice status:', error);
       return { error };
     }
   }

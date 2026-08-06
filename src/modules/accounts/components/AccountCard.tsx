@@ -2,6 +2,7 @@ import { Account } from '../types/account.types';
 import { Button } from '../../../core/ui/components/button';
 import { Pencil, Trash2, Landmark, Wallet, Banknote, LineChart, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatedInteraction } from '../../../core/ui/components/AnimatedInteraction';
 
 interface AccountCardProps {
   key?: string | number;
@@ -59,22 +60,26 @@ export function AccountCard({ account, onDelete }: AccountCardProps) {
         </div>
         
         <div className="flex gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-muted-foreground hover:text-foreground"
-            onClick={() => navigate(`/accounts/${account.id}/edit`)}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-muted-foreground hover:text-destructive dark:text-red-400"
-            onClick={() => onDelete(account.id)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <AnimatedInteraction>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => navigate(`/accounts/${account.id}/edit`)}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </AnimatedInteraction>
+          <AnimatedInteraction>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-muted-foreground hover:text-destructive dark:text-red-400"
+              onClick={() => onDelete(account.id)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </AnimatedInteraction>
         </div>
       </div>
     </div>

@@ -1,0 +1,2 @@
+ALTER TABLE credit_card_invoices
+ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'PAID'));

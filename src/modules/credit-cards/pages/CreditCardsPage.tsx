@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CreditCard as CreditCardIcon, Plus, ChevronRight } from 'lucide-react';
+import { CreditCard as CreditCardIcon, Plus, ChevronRight, Trash2 } from 'lucide-react';
 import { useUser } from '../../auth/hooks/useAuth';
 import { creditCardsService } from '../services/CreditCardsService';
 import { CreditCard } from '../types';
+import { toast } from 'sonner';
+import { StaggerContainer, StaggerItem } from '../../../core/ui/components/StaggerAnimation';
+import { AnimatedInteraction } from '../../../core/ui/components/AnimatedInteraction';
 
 export function CreditCardsPage() {
   const user = useUser();
@@ -22,17 +25,34 @@ export function CreditCardsPage() {
     setLoading(false);
   };
 
+  const handleDelete = async (e: React.MouseEvent, cardId: string, name: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (window.confirm(`Tem certeza que deseja excluir o cartão ${name}? Essa ação não pode ser desfeita e removerá todas as transações associadas.`)) {
+      const { error } = await creditCardsService.deleteCreditCard(user!.id, cardId);
+      if (error) {
+        toast.error('Erro ao excluir cartão');
+      } else {
+        toast.success('Cartão excluído com sucesso');
+        loadCards();
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Cartões de Crédito</h1>
-        <Link
-          to="/credit-cards/new"
-          className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Cartão
-        </Link>
+        <AnimatedInteraction>
+          <Link
+            to="/credit-cards/new"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Cartão
+          </Link>
+        </AnimatedInteraction>
       </div>
 
       {loading ? (
@@ -50,57 +70,71 @@ export function CreditCardsPage() {
           <p className="text-muted-foreground mb-8 max-w-sm">
             Adicione seu primeiro cartão de crédito para gerenciar faturas e planejar seus gastos.
           </p>
-          <Link
-            to="/credit-cards/new"
-            className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            Adicionar Cartão
-          </Link>
+          <AnimatedInteraction>
+            <Link
+              to="/credit-cards/new"
+              className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Adicionar Cartão
+            </Link>
+          </AnimatedInteraction>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <StaggerContainer className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {cards.map((card) => (
-            <Link
-              key={card.id}
-              to={`/credit-cards/${card.id}/invoices`}
-              className="group block rounded-3xl border border-border bg-card p-6 transition-all hover:shadow-sm"
-              style={{ borderTopWidth: 4, borderTopColor: card.color || '#000000' }}
-            >
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="font-semibold text-lg">{card.name}</h3>
-                  <p className="text-sm text-muted-foreground">{card.brand || 'Cartão de Crédito'}</p>
+            <StaggerItem key={card.id}>
+              <Link
+                to={`/credit-cards/${card.id}/invoices`}
+                className="group block rounded-3xl border border-border bg-card p-6 transition-all hover:shadow-sm h-full"
+                style={{ borderTopWidth: 4, borderTopColor: card.color || '#000000' }}
+              >
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h3 className="font-semibold text-lg">{card.name}</h3>
+                    <p className="text-sm text-muted-foreground">{card.brand || 'Cartão de Crédito'}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AnimatedInteraction>
+                      <button
+                        onClick={(e) => handleDelete(e, card.id, card.name)}
+                        className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        title="Excluir Cartão"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </AnimatedInteraction>
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                      <CreditCardIcon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                  </div>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                  <CreditCardIcon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
-              </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Limite Total</span>
-                  <span className="font-medium">
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL',
-                    }).format(card.limit || 0)}
-                  </span>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Limite Total</span>
+                    <span className="font-medium">
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(card.limit || 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Fechamento / Venc.</span>
+                    <span className="font-medium">
+                      {card.closing_day} / {card.due_day}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Fechamento / Venc.</span>
-                  <span className="font-medium">
-                    {card.closing_day} / {card.due_day}
-                  </span>
-                </div>
-              </div>
 
-              <div className="mt-6 flex items-center text-sm font-medium text-primary">
-                Ver faturas
-                <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </div>
-            </Link>
+                <div className="mt-6 flex items-center text-sm font-medium text-primary">
+                  Ver faturas
+                  <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </div>
+              </Link>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       )}
     </div>
   );

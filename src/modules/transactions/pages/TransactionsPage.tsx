@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { BankSyncModal } from '../../open-finance/components/BankSyncModal';
 import { ImportTransactionsModal } from '../components/ImportTransactionsModal';
 import { PageTransition } from '../../../core/ui/components/PageTransition';
+import { AnimatedInteraction } from '../../../core/ui/components/AnimatedInteraction';
 import { useTransactionsSubscription } from '../hooks/useTransactionsSubscription';
 import { categorizeTransactions } from '../../ai/services/geminiService';
 import { categoryService } from '../../categories/services/CategoryService';
@@ -134,31 +135,39 @@ export function TransactionsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Transações</h2>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Button 
-            variant="secondary" 
-            onClick={handleCategorize} 
-            disabled={isCategorizing || loading || transactions.length === 0}
-            className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:hover:bg-indigo-900/60"
-          >
-            {isCategorizing ? (
-              <Spinner className="mr-2 h-4 w-4" />
-            ) : (
-              <Sparkles className="mr-2 h-4 w-4" />
-            )}
-            Categorizar com IA
-          </Button>
-          <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
-            <Upload className="mr-2 h-4 w-4" />
-            Importar OFX/CSV/PDF
-          </Button>
-          <Button variant="outline" onClick={() => setIsSyncModalOpen(true)}>
-            <LinkIcon className="mr-2 h-4 w-4" />
-            Sincronizar Banco
-          </Button>
-          <Button onClick={() => navigate('/transactions/new')}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nova transação
-          </Button>
+          <AnimatedInteraction>
+            <Button 
+              variant="secondary" 
+              onClick={handleCategorize} 
+              disabled={isCategorizing || loading || transactions.length === 0}
+              className="w-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:hover:bg-indigo-900/60"
+            >
+              {isCategorizing ? (
+                <Spinner className="mr-2 h-4 w-4" />
+              ) : (
+                <Sparkles className="mr-2 h-4 w-4" />
+              )}
+              Categorizar com IA
+            </Button>
+          </AnimatedInteraction>
+          <AnimatedInteraction>
+            <Button variant="outline" className="w-full" onClick={() => setIsImportModalOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Importar OFX/CSV/PDF
+            </Button>
+          </AnimatedInteraction>
+          <AnimatedInteraction>
+            <Button variant="outline" className="w-full" onClick={() => setIsSyncModalOpen(true)}>
+              <LinkIcon className="mr-2 h-4 w-4" />
+              Sincronizar Banco
+            </Button>
+          </AnimatedInteraction>
+          <AnimatedInteraction>
+            <Button className="w-full" onClick={() => navigate('/transactions/new')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nova transação
+            </Button>
+          </AnimatedInteraction>
         </div>
       </div>
 

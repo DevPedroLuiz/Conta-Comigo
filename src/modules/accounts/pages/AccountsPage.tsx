@@ -12,10 +12,13 @@ import { AccountEmptyState } from '../components/AccountEmptyState';
 import { OpenFinanceConnectionsCard } from '../components/OpenFinanceConnectionsCard';
 import { Spinner } from '../../../core/ui/components/spinner';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import { AnimatedInteraction } from '../../../core/ui/components/AnimatedInteraction';
 
 export function AccountsPage() {
   const user = useUser();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -82,6 +85,9 @@ export function AccountsPage() {
       
       // Reload accounts data to reflect new balance
       loadData();
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
     } catch (error: unknown) {
       console.error('Erro na sincronização:', error);
       if (error instanceof Error) {
@@ -98,10 +104,12 @@ export function AccountsPage() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Minhas Contas</h2>
-        <Button onClick={() => navigate('/accounts/new')}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Conta
-        </Button>
+        <AnimatedInteraction>
+          <Button onClick={() => navigate('/accounts/new')}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Conta
+          </Button>
+        </AnimatedInteraction>
       </div>
 
       {loading ? (

@@ -2,6 +2,8 @@ import { Transaction } from '../types/transaction.types';
 import { Button } from '../../../core/ui/components/button';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { StaggerContainer, StaggerItem } from '../../../core/ui/components/StaggerAnimation';
+import { AnimatedInteraction } from '../../../core/ui/components/AnimatedInteraction';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -14,7 +16,7 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
   return (
     <div className="rounded-md border border-border">
       {/* Mobile view (cards) */}
-      <div className="block md:hidden divide-y divide-border">
+      <StaggerContainer className="block md:hidden divide-y divide-border">
         {transactions.map((tx) => {
           const isIncome = tx.type === 'INCOME' || tx.type === 'TRANSFER_IN';
           const isTransfer = tx.type === 'TRANSFER_IN' || tx.type === 'TRANSFER_OUT';
@@ -25,7 +27,7 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
           }).format(tx.amount);
 
           return (
-            <div key={tx.id} className="p-4 flex flex-col gap-2 bg-card hover:bg-muted/30 transition-colors">
+            <StaggerItem key={tx.id} className="p-4 flex flex-col gap-2 bg-card hover:bg-muted/30 transition-colors">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
                   <div 
@@ -52,28 +54,32 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
               
               {!isTransfer && (
                 <div className="flex justify-end gap-2 mt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-8 text-muted-foreground"
-                    onClick={() => navigate(`/transactions/${tx.id}/edit`)}
-                  >
-                    <Pencil className="h-3 w-3 mr-1" /> Editar
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-8 text-muted-foreground hover:text-destructive hover:border-destructive"
-                    onClick={() => onDelete(tx.id)}
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" /> Excluir
-                  </Button>
+                  <AnimatedInteraction>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 text-muted-foreground"
+                      onClick={() => navigate(`/transactions/${tx.id}/edit`)}
+                    >
+                      <Pencil className="h-3 w-3 mr-1" /> Editar
+                    </Button>
+                  </AnimatedInteraction>
+                  <AnimatedInteraction>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 text-muted-foreground hover:text-destructive hover:border-destructive"
+                      onClick={() => onDelete(tx.id)}
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" /> Excluir
+                    </Button>
+                  </AnimatedInteraction>
                 </div>
               )}
-            </div>
+            </StaggerItem>
           );
         })}
-      </div>
+      </StaggerContainer>
 
       {/* Desktop view (table) */}
       <div className="hidden md:block w-full overflow-auto">
@@ -88,7 +94,7 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
               <th className="h-10 px-4 text-center font-medium text-muted-foreground w-24">Ações</th>
             </tr>
           </thead>
-          <tbody>
+          <StaggerContainer as="tbody">
             {transactions.map((tx) => {
               const isIncome = tx.type === 'INCOME' || tx.type === 'TRANSFER_IN';
               const isTransfer = tx.type === 'TRANSFER_IN' || tx.type === 'TRANSFER_OUT';
@@ -99,7 +105,7 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
               }).format(tx.amount);
 
               return (
-                <tr key={tx.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                <StaggerItem as="tr" key={tx.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                   <td className="p-4 align-middle whitespace-nowrap">{formattedDate}</td>
                   <td className="p-4 align-middle font-medium">{tx.description}</td>
                   <td className="p-4 align-middle">
@@ -119,30 +125,34 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
                     <div className="flex items-center justify-center gap-2">
                       {!isTransfer && (
                         <>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            onClick={() => navigate(`/transactions/${tx.id}/edit`)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive dark:text-red-400"
-                            onClick={() => onDelete(tx.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <AnimatedInteraction>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              onClick={() => navigate(`/transactions/${tx.id}/edit`)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </AnimatedInteraction>
+                          <AnimatedInteraction>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive dark:text-red-400"
+                              onClick={() => onDelete(tx.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AnimatedInteraction>
                         </>
                       )}
                     </div>
                   </td>
-                </tr>
+                </StaggerItem>
               );
             })}
-          </tbody>
+          </StaggerContainer>
         </table>
       </div>
     </div>

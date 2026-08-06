@@ -6,6 +6,7 @@ import { Button } from '../components/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../components/dropdown-menu';
 import { useTheme } from '../../providers/ThemeProvider';
 import { BottomNav } from '../components/BottomNav';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -159,7 +160,18 @@ export function MainLayout() {
 
         <div className="flex-1 overflow-auto p-4 sm:p-8 pb-24 md:pb-8">
           <div className="max-w-7xl mx-auto h-full">
-            <Outlet />
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={location.pathname}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="h-full"
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
         <BottomNav />

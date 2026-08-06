@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, FileText, CheckCircle2, Circle } from 'lucide-react';
 import { useUser } from '../../auth/hooks/useAuth';
 import { creditCardsService } from '../services/CreditCardsService';
 import { CreditCard, CreditCardInvoice } from '../types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../../../core/ui/components/dialog';
 import { referenceRepository } from '../../transactions/repositories/TransactionRepository';
+import { toast } from 'sonner';
+import { StaggerContainer, StaggerItem } from '../../../core/ui/components/StaggerAnimation';
+import { AnimatedInteraction } from '../../../core/ui/components/AnimatedInteraction';
 
 export function CreditCardInvoicesPage() {
   const { id } = useParams<{ id: string }>();
@@ -52,26 +55,45 @@ export function CreditCardInvoicesPage() {
     
     setPayingInvoice(null);
     setIsPaying(false);
+    toast.success('Fatura paga com sucesso!');
     loadData();
   };
 
+  const handleToggleStatus = async (invoice: any) => {
+    const currentStatus = invoice.status || 'OPEN';
+    const { error } = await creditCardsService.toggleInvoiceStatus(invoice.id, currentStatus);
+    if (error) {
+      toast.error('Erro ao atualizar status da fatura');
+    } else {
+      toast.success(`Fatura marcada como ${currentStatus === 'PAID' ? 'Em aberto' : 'Paga'}!`);
+      loadData();
+    }
+  };
+
   if (loading) {
-    return <div className="space-y-4">Carregando...</div>;
+    return <div className="space-y-4 p-8 text-center text-muted-foreground">Carregando faturas...</div>;
   }
 
   if (!card) {
-    return <div>Cartão não encontrado.</div>;
+    return <div className="p-8 text-center text-muted-foreground">Cartão não encontrado.</div>;
   }
+
+  const getMonthName = (month: number) => {
+    const name = new Date(2000, month - 1, 15).toLocaleString('pt-BR', { month: 'long' });
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate('/credit-cards')}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
+        <AnimatedInteraction>
+          <button
+            onClick={() => navigate('/credit-cards')}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        </AnimatedInteraction>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Faturas - {card.name}</h1>
           <p className="text-sm text-muted-foreground">Vencimento: dia {card.due_day}</p>
@@ -89,18 +111,28 @@ export function CreditCardInvoicesPage() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {invoices.map((invoice) => {
-            const isPaid = (invoice as any).status === 'PAID';
+        <StaggerContainer className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {invoices.map((invoice: any) => {
+            const isPaid = invoice.status === 'PAID';
             return (
-            <div key={invoice.id} className="rounded-3xl border border-border bg-card p-6 flex flex-col justify-between">
+            <StaggerItem key={invoice.id} className="rounded-3xl border border-border bg-card p-6 flex flex-col justify-between">
               <div className="mb-4 flex justify-between items-start">
                 <span className="text-lg font-medium">
-                  {new Date(invoice.year, invoice.month - 1).toLocaleString('pt-BR', { month: 'long' })} {invoice.year}
+                  {getMonthName(invoice.month)} {invoice.year}
                 </span>
-                {isPaid && (
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                )}
+                <AnimatedInteraction>
+                  <button
+                    onClick={() => handleToggleStatus(invoice)}
+                    title={isPaid ? "Marcar como Em Aberto" : "Marcar como Paga"}
+                    className="p-1 rounded-full hover:bg-muted transition-colors"
+                  >
+                    {isPaid ? (
+                      <CheckCircle2 className="h-6 w-6 text-green-500" />
+                    ) : (
+                      <Circle className="h-6 w-6 text-muted-foreground/30 hover:text-green-500/50" />
+                    )}
+                  </button>
+                </AnimatedInteraction>
               </div>
               <div className="flex flex-col gap-4 mt-auto">
                 <div className="flex items-center justify-between">
@@ -114,17 +146,19 @@ export function CreditCardInvoicesPage() {
                   </span>
                 </div>
                 {!isPaid && (
-                  <button
-                    onClick={() => setPayingInvoice(invoice)}
-                    className="w-full rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-                  >
-                    Pagar Fatura
-                  </button>
+                  <AnimatedInteraction className="w-full">
+                    <button
+                      onClick={() => setPayingInvoice(invoice)}
+                      className="w-full rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                    >
+                      Pagar Fatura
+                    </button>
+                  </AnimatedInteraction>
                 )}
               </div>
-            </div>
+            </StaggerItem>
           )})}
-        </div>
+        </StaggerContainer>
       )}
 
       <Dialog open={!!payingInvoice} onOpenChange={(open) => !open && setPayingInvoice(null)}>
@@ -132,7 +166,7 @@ export function CreditCardInvoicesPage() {
           <DialogHeader>
             <DialogTitle>Pagar Fatura</DialogTitle>
             <DialogDescription>
-              Fatura de {payingInvoice ? new Date(payingInvoice.year, payingInvoice.month - 1).toLocaleString('pt-BR', { month: 'long' }) : ''} no valor de R$ {(payingInvoice?.total_amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.
+              Fatura de {payingInvoice ? getMonthName(payingInvoice.month) : ''} no valor de R$ {(Math.abs(payingInvoice?.total_amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
@@ -141,11 +175,11 @@ export function CreditCardInvoicesPage() {
               <select
                 value={selectedAccountId}
                 onChange={(e) => setSelectedAccountId(e.target.value)}
-                className="w-full rounded-2xl border border-input bg-transparent px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
+                className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow text-foreground appearance-none"
               >
-                <option value="">Selecione uma conta...</option>
+                <option value="" className="text-muted-foreground">Selecione uma conta...</option>
                 {accounts.map(acc => (
-                  <option key={acc.id} value={acc.id}>{acc.name}</option>
+                  <option key={acc.id} value={acc.id} className="text-foreground">{acc.name}</option>
                 ))}
               </select>
             </div>

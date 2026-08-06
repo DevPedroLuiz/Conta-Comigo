@@ -87,6 +87,11 @@ export class CreditCardsRepository {
     return data as CreditCardInvoice;
   }
 
+  async updateInvoiceStatus(invoiceId: string, status: "OPEN" | "PAID"): Promise<void> {
+    const { error } = await supabase.from("credit_card_invoices").update({ status }).eq("id", invoiceId);
+    if (error) throw error;
+  }
+
   async getInvoicePayments(invoiceIds: string[]) {
     if (invoiceIds.length === 0) return [];
     const { data, error } = await supabase

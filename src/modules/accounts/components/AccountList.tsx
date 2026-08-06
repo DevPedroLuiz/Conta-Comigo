@@ -1,5 +1,6 @@
 import { Account } from '../types/account.types';
 import { AccountCard } from './AccountCard';
+import { StaggerContainer, StaggerItem } from '../../../core/ui/components/StaggerAnimation';
 
 interface AccountListProps {
   accounts: Account[];
@@ -8,10 +9,12 @@ interface AccountListProps {
 
 export function AccountList({ accounts, onDelete }: AccountListProps) {
   return (
-    <div className="space-y-4">
+    <StaggerContainer className="space-y-4">
       {accounts.map(account => (
-        <AccountCard key={account.id} account={account} onDelete={onDelete} />
+        <StaggerItem key={account.id}>
+          <AccountCard account={account} onDelete={onDelete} />
+        </StaggerItem>
       ))}
-    </div>
+    </StaggerContainer>
   );
 }
