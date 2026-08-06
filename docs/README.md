@@ -1,7 +1,7 @@
 # Conta Comigo - Sistema de Gestão Financeira Pessoal
 
 ## Visão Geral
-Sistema profissional para gestão de finanças pessoais, projetado para escalar para milhares de usuários. O ecossistema é composto por uma aplicação Web e um aplicativo Android nativo, operando sob uma arquitetura de Monorepo com backend Serverless.
+Sistema profissional para gestão de finanças pessoais, projetado para escalar para milhares de usuários. O ecossistema é composto por uma aplicação Web e um aplicativo Android nativo, operando sob uma arquitetura de Monorepo com backend Serverless..
 
 ## Tecnologias Principais
 - **Frontend Web:** React, Vite (adaptado do Next.js para este ambiente), TypeScript, Tailwind CSS, Shadcn/UI.
