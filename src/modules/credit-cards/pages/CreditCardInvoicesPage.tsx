@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, CheckCircle2, Circle } from 'lucide-react';
+import { ArrowLeft, FileText, CheckCircle2, Circle, Eye } from 'lucide-react';
 import { useUser } from '../../auth/hooks/useAuth';
 import { creditCardsService } from '../services/CreditCardsService';
 import { CreditCard, CreditCardInvoice } from '../types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../../../core/ui/components/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../../../core/ui/components/sheet';
 import { referenceRepository } from '../../transactions/repositories/TransactionRepository';
 import { toast } from 'sonner';
 import { StaggerContainer, StaggerItem } from '../../../core/ui/components/StaggerAnimation';
@@ -21,6 +22,7 @@ export function CreditCardInvoicesPage() {
   const [accounts, setAccounts] = useState<any[]>([]);
 
   const [payingInvoice, setPayingInvoice] = useState<CreditCardInvoice | null>(null);
+  const [viewingInvoice, setViewingInvoice] = useState<CreditCardInvoice | null>(null);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
   const [isPaying, setIsPaying] = useState(false);
 
@@ -145,16 +147,27 @@ export function CreditCardInvoicesPage() {
                     {isPaid ? 'Paga' : 'Em aberto'}
                   </span>
                 </div>
-                {!isPaid && (
+                <div className="flex flex-col gap-2">
+                  {!isPaid && (
+                    <AnimatedInteraction className="w-full">
+                      <button
+                        onClick={() => setPayingInvoice(invoice)}
+                        className="w-full rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                      >
+                        Pagar Fatura
+                      </button>
+                    </AnimatedInteraction>
+                  )}
                   <AnimatedInteraction className="w-full">
                     <button
-                      onClick={() => setPayingInvoice(invoice)}
-                      className="w-full rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                      onClick={() => setViewingInvoice(invoice)}
+                      className="w-full rounded-2xl border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors inline-flex items-center justify-center gap-2"
                     >
-                      Pagar Fatura
+                      <Eye className="h-4 w-4" />
+                      Ver Detalhes
                     </button>
                   </AnimatedInteraction>
-                )}
+                </div>
               </div>
             </StaggerItem>
           )})}
@@ -202,6 +215,39 @@ export function CreditCardInvoicesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Sheet open={!!viewingInvoice} onOpenChange={(open) => !open && setViewingInvoice(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader className="mb-6">
+            <SheetTitle>Detalhes da Fatura</SheetTitle>
+            <SheetDescription>
+              {viewingInvoice ? `${getMonthName(viewingInvoice.month)} ${viewingInvoice.year}` : ''}
+            </SheetDescription>
+          </SheetHeader>
+
+          {viewingInvoice?.transactions?.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground border border-dashed rounded-2xl bg-muted/30">
+              <p>Nenhuma transação registrada nesta fatura.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {viewingInvoice?.transactions?.map((tx: any) => (
+                <div key={tx.id} className="flex justify-between items-center p-4 border rounded-2xl bg-card">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-sm">{tx.description}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(tx.date + 'T00:00:00').toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
+                  <div className={`font-semibold ${tx.type === 'INCOME' ? 'text-green-500' : 'text-foreground'}`}>
+                    {tx.type === 'INCOME' ? '+' : '-'} R$ {Math.abs(tx.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

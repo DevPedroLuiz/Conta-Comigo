@@ -82,7 +82,7 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
       </StaggerContainer>
 
       {/* Desktop view (table) */}
-      <div className="hidden md:block w-full overflow-auto">
+      <div className="hidden md:block w-full overflow-x-auto overflow-y-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr className="border-b border-border">

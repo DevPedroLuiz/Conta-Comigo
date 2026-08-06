@@ -135,7 +135,9 @@ export class DashboardRepository {
     data?.forEach((tx: any) => {
       const categoryName = tx.categories?.name || 'Geral';
       const categoryColor = tx.categories?.color || '#888888';
-      const amount = Number(tx.amount) || 0;
+      const amount = Math.abs(Number(tx.amount) || 0);
+
+      if (amount <= 0) return;
 
       if (!expensesByCategory[categoryName]) {
         expensesByCategory[categoryName] = {

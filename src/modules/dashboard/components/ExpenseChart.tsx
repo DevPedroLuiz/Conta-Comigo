@@ -7,13 +7,18 @@ interface ExpenseChartProps {
 }
 
 export function ExpenseChart({ data }: ExpenseChartProps) {
-  if (data.length === 0) {
+  if (!data || data.length === 0) {
     return (
-      <Card className="h-full">
+      <Card className="h-full flex flex-col">
         <CardHeader>
           <CardTitle>Despesas por Categoria</CardTitle>
-          <CardDescription>Sem despesas no período selecionado.</CardDescription>
+          <CardDescription>Distribuição dos seus gastos no mês atual.</CardDescription>
         </CardHeader>
+        <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[300px]">
+          <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground border border-dashed rounded-2xl bg-muted/30 w-full max-w-xs mx-auto">
+            <p>Nenhuma despesa registrada neste mês.</p>
+          </div>
+        </CardContent>
       </Card>
     );
   }

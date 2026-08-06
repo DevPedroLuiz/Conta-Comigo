@@ -76,13 +76,16 @@ export class CreditCardsService {
       const transactions = await creditCardsRepository.getCardTransactions(creditCardId);
       
       const invoiceTotals: Record<string, number> = {};
+      const invoiceTransactions: Record<string, any[]> = {};
       
       for (const tx of transactions) {
-        const amount = tx.type === 'EXPENSE' ? tx.amount : -tx.amount;
+        const rawAmount = Math.abs(tx.amount);
+        const amount = tx.type === 'EXPENSE' ? rawAmount : -rawAmount;
         const txDate = new Date(tx.date + 'T00:00:00');
         let month = txDate.getMonth() + 1;
         let year = txDate.getFullYear();
         
+        // If the transaction date is equal to or after the closing day, it falls into the next invoice month.
         if (txDate.getDate() >= card.closing_day) {
           month += 1;
           if (month > 12) {
@@ -93,9 +96,15 @@ export class CreditCardsService {
         
         const key = `${year}-${month}`;
         invoiceTotals[key] = (invoiceTotals[key] || 0) + amount;
+        
+        if (!invoiceTransactions[key]) {
+          invoiceTransactions[key] = [];
+        }
+        invoiceTransactions[key].push(tx);
       }
       
       let existingInvoices = await creditCardsRepository.getInvoices(creditCardId);
+
       const existingKeys = new Set(existingInvoices.map(i => `${i.year}-${i.month}`));
       
       for (const key of Object.keys(invoiceTotals)) {
@@ -124,9 +133,15 @@ export class CreditCardsService {
         const key = `${inv.year}-${inv.month}`;
         // Support either legacy payments or the new status column
         const isPaid = (inv as any).status === 'PAID' || paidInvoiceIds.has(inv.id);
+        
+        // Ensure total amount is never negative, in case of refunds exceeding expenses
+        const calculatedTotal = invoiceTotals[key] || 0;
+        const totalAmount = calculatedTotal < 0 ? 0 : calculatedTotal;
+        
         return {
           ...inv,
-          total_amount: invoiceTotals[key] || 0,
+          total_amount: totalAmount,
+          transactions: invoiceTransactions[key] || [],
           status: isPaid ? 'PAID' : 'OPEN'
         };
       });
