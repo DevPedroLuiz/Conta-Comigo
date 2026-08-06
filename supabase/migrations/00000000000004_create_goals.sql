@@ -36,24 +36,25 @@ ALTER TABLE goals ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies if any to avoid conflicts
 DROP POLICY IF EXISTS "Users can view their own goals" ON goals;
-DROP POLICY IF EXISTS "Users can insert their own goals" ON goals;
-DROP POLICY IF EXISTS "Users can update their own goals" ON goals;
-DROP POLICY IF EXISTS "Users can delete their own goals" ON goals;
 
 -- Create RLS Policies
+DROP POLICY IF EXISTS "Users can view their own goals" ON goals;
 CREATE POLICY "Users can view their own goals" 
 ON goals FOR SELECT 
 USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own goals" ON goals;
 CREATE POLICY "Users can insert their own goals" 
 ON goals FOR INSERT 
 WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own goals" ON goals;
 CREATE POLICY "Users can update their own goals" 
 ON goals FOR UPDATE 
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own goals" ON goals;
 CREATE POLICY "Users can delete their own goals" 
 ON goals FOR DELETE 
 USING (auth.uid() = user_id);

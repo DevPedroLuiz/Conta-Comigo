@@ -31,24 +31,25 @@ ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies if any to avoid conflicts
 DROP POLICY IF EXISTS "Users can view their own accounts" ON accounts;
-DROP POLICY IF EXISTS "Users can insert their own accounts" ON accounts;
-DROP POLICY IF EXISTS "Users can update their own accounts" ON accounts;
-DROP POLICY IF EXISTS "Users can delete their own accounts" ON accounts;
 
 -- Create RLS Policies
+DROP POLICY IF EXISTS "Users can view their own accounts" ON accounts;
 CREATE POLICY "Users can view their own accounts" 
 ON accounts FOR SELECT 
 USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own accounts" ON accounts;
 CREATE POLICY "Users can insert their own accounts" 
 ON accounts FOR INSERT 
 WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own accounts" ON accounts;
 CREATE POLICY "Users can update their own accounts" 
 ON accounts FOR UPDATE 
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own accounts" ON accounts;
 CREATE POLICY "Users can delete their own accounts" 
 ON accounts FOR DELETE 
 USING (auth.uid() = user_id);

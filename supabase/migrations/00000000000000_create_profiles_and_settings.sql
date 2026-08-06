@@ -33,23 +33,25 @@ ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies if any to avoid conflicts
 DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
-DROP POLICY IF EXISTS "Users can insert their own profile" ON profiles;
-DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
-DROP POLICY IF EXISTS "Users can delete their own profile" ON profiles;
 
 DROP POLICY IF EXISTS "Users can view their own settings" ON settings;
-DROP POLICY IF EXISTS "Users can insert their own settings" ON settings;
-DROP POLICY IF EXISTS "Users can update their own settings" ON settings;
-DROP POLICY IF EXISTS "Users can delete their own settings" ON settings;
 
 -- Create RLS Policies for profiles
+DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
 CREATE POLICY "Users can view their own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can insert their own profile" ON profiles;
 CREATE POLICY "Users can insert their own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
 CREATE POLICY "Users can update their own profile" ON profiles FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can delete their own profile" ON profiles;
 CREATE POLICY "Users can delete their own profile" ON profiles FOR DELETE USING (auth.uid() = id);
 
 -- Create RLS Policies for settings
+DROP POLICY IF EXISTS "Users can view their own settings" ON settings;
 CREATE POLICY "Users can view their own settings" ON settings FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert their own settings" ON settings;
 CREATE POLICY "Users can insert their own settings" ON settings FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update their own settings" ON settings;
 CREATE POLICY "Users can update their own settings" ON settings FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete their own settings" ON settings;
 CREATE POLICY "Users can delete their own settings" ON settings FOR DELETE USING (auth.uid() = user_id);

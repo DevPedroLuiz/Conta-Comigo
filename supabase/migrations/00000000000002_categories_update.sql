@@ -31,24 +31,25 @@ ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies if any to avoid conflicts
 DROP POLICY IF EXISTS "Users can view their own or default categories" ON categories;
-DROP POLICY IF EXISTS "Users can insert their own categories" ON categories;
-DROP POLICY IF EXISTS "Users can update their own categories" ON categories;
-DROP POLICY IF EXISTS "Users can delete their own categories" ON categories;
 
 -- Create RLS Policies
+DROP POLICY IF EXISTS "Users can view their own or default categories" ON categories;
 CREATE POLICY "Users can view their own or default categories" 
 ON categories FOR SELECT 
 USING (auth.uid() = user_id OR is_default = true);
 
+DROP POLICY IF EXISTS "Users can insert their own categories" ON categories;
 CREATE POLICY "Users can insert their own categories" 
 ON categories FOR INSERT 
 WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own categories" ON categories;
 CREATE POLICY "Users can update their own categories" 
 ON categories FOR UPDATE 
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own categories" ON categories;
 CREATE POLICY "Users can delete their own categories" 
 ON categories FOR DELETE 
 USING (auth.uid() = user_id AND is_default = false);

@@ -77,62 +77,86 @@ CREATE INDEX IF NOT EXISTS subscriptions_user_id_idx ON subscriptions(user_id);
 
 -- RLS transaction_installments
 ALTER TABLE transaction_installments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view their own transaction_installments" ON transaction_installments;
 CREATE POLICY "Users can view their own transaction_installments" ON transaction_installments FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert their own transaction_installments" ON transaction_installments;
 CREATE POLICY "Users can insert their own transaction_installments" ON transaction_installments FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update their own transaction_installments" ON transaction_installments;
 CREATE POLICY "Users can update their own transaction_installments" ON transaction_installments FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete their own transaction_installments" ON transaction_installments;
 CREATE POLICY "Users can delete their own transaction_installments" ON transaction_installments FOR DELETE USING (auth.uid() = user_id);
 
 -- RLS transaction_recurrences
 ALTER TABLE transaction_recurrences ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view their own transaction_recurrences" ON transaction_recurrences;
 CREATE POLICY "Users can view their own transaction_recurrences" ON transaction_recurrences FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert their own transaction_recurrences" ON transaction_recurrences;
 CREATE POLICY "Users can insert their own transaction_recurrences" ON transaction_recurrences FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update their own transaction_recurrences" ON transaction_recurrences;
 CREATE POLICY "Users can update their own transaction_recurrences" ON transaction_recurrences FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete their own transaction_recurrences" ON transaction_recurrences;
 CREATE POLICY "Users can delete their own transaction_recurrences" ON transaction_recurrences FOR DELETE USING (auth.uid() = user_id);
 
 -- RLS credit_cards
 ALTER TABLE credit_cards ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view their own credit_cards" ON credit_cards;
 CREATE POLICY "Users can view their own credit_cards" ON credit_cards FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert their own credit_cards" ON credit_cards;
 CREATE POLICY "Users can insert their own credit_cards" ON credit_cards FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update their own credit_cards" ON credit_cards;
 CREATE POLICY "Users can update their own credit_cards" ON credit_cards FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete their own credit_cards" ON credit_cards;
 CREATE POLICY "Users can delete their own credit_cards" ON credit_cards FOR DELETE USING (auth.uid() = user_id);
 
 -- RLS credit_card_invoices
 ALTER TABLE credit_card_invoices ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view their own credit_card_invoices" ON credit_card_invoices;
 CREATE POLICY "Users can view their own credit_card_invoices" ON credit_card_invoices FOR SELECT USING (
     credit_card_id IN (SELECT id FROM credit_cards WHERE user_id = auth.uid())
 );
+DROP POLICY IF EXISTS "Users can insert their own credit_card_invoices" ON credit_card_invoices;
 CREATE POLICY "Users can insert their own credit_card_invoices" ON credit_card_invoices FOR INSERT WITH CHECK (
     credit_card_id IN (SELECT id FROM credit_cards WHERE user_id = auth.uid())
 );
+DROP POLICY IF EXISTS "Users can update their own credit_card_invoices" ON credit_card_invoices;
 CREATE POLICY "Users can update their own credit_card_invoices" ON credit_card_invoices FOR UPDATE USING (
     credit_card_id IN (SELECT id FROM credit_cards WHERE user_id = auth.uid())
 ) WITH CHECK (
     credit_card_id IN (SELECT id FROM credit_cards WHERE user_id = auth.uid())
 );
+DROP POLICY IF EXISTS "Users can delete their own credit_card_invoices" ON credit_card_invoices;
 CREATE POLICY "Users can delete their own credit_card_invoices" ON credit_card_invoices FOR DELETE USING (
     credit_card_id IN (SELECT id FROM credit_cards WHERE user_id = auth.uid())
 );
 
 -- RLS invoice_payments
 ALTER TABLE invoice_payments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view their own invoice_payments" ON invoice_payments;
 CREATE POLICY "Users can view their own invoice_payments" ON invoice_payments FOR SELECT USING (
     transaction_id IN (SELECT id FROM transactions WHERE user_id = auth.uid())
 );
+DROP POLICY IF EXISTS "Users can insert their own invoice_payments" ON invoice_payments;
 CREATE POLICY "Users can insert their own invoice_payments" ON invoice_payments FOR INSERT WITH CHECK (
     transaction_id IN (SELECT id FROM transactions WHERE user_id = auth.uid())
 );
+DROP POLICY IF EXISTS "Users can update their own invoice_payments" ON invoice_payments;
 CREATE POLICY "Users can update their own invoice_payments" ON invoice_payments FOR UPDATE USING (
     transaction_id IN (SELECT id FROM transactions WHERE user_id = auth.uid())
 ) WITH CHECK (
     transaction_id IN (SELECT id FROM transactions WHERE user_id = auth.uid())
 );
+DROP POLICY IF EXISTS "Users can delete their own invoice_payments" ON invoice_payments;
 CREATE POLICY "Users can delete their own invoice_payments" ON invoice_payments FOR DELETE USING (
     transaction_id IN (SELECT id FROM transactions WHERE user_id = auth.uid())
 );
 
 -- RLS subscriptions
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view their own subscriptions" ON subscriptions;
 CREATE POLICY "Users can view their own subscriptions" ON subscriptions FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert their own subscriptions" ON subscriptions;
 CREATE POLICY "Users can insert their own subscriptions" ON subscriptions FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update their own subscriptions" ON subscriptions;
 CREATE POLICY "Users can update their own subscriptions" ON subscriptions FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete their own subscriptions" ON subscriptions;
 CREATE POLICY "Users can delete their own subscriptions" ON subscriptions FOR DELETE USING (auth.uid() = user_id);

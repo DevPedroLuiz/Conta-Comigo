@@ -89,20 +89,34 @@ ALTER TABLE investment_movements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dividends ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "Users can view their own investments" ON investments;
 CREATE POLICY "Users can view their own investments" ON investments FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert their own investments" ON investments;
 CREATE POLICY "Users can insert their own investments" ON investments FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update their own investments" ON investments;
 CREATE POLICY "Users can update their own investments" ON investments FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete their own investments" ON investments;
 CREATE POLICY "Users can delete their own investments" ON investments FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view their own investment assets" ON investment_assets;
 CREATE POLICY "Users can view their own investment assets" ON investment_assets FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert their own investment assets" ON investment_assets;
 CREATE POLICY "Users can insert their own investment assets" ON investment_assets FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update their own investment assets" ON investment_assets;
 CREATE POLICY "Users can update their own investment assets" ON investment_assets FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete their own investment assets" ON investment_assets;
 CREATE POLICY "Users can delete their own investment assets" ON investment_assets FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view their own investment movements" ON investment_movements;
 CREATE POLICY "Users can view their own investment movements" ON investment_movements FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert their own investment movements" ON investment_movements;
 CREATE POLICY "Users can insert their own investment movements" ON investment_movements FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete their own investment movements" ON investment_movements;
 CREATE POLICY "Users can delete their own investment movements" ON investment_movements FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view their own dividends" ON dividends;
 CREATE POLICY "Users can view their own dividends" ON dividends FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert their own dividends" ON dividends;
 CREATE POLICY "Users can insert their own dividends" ON dividends FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete their own dividends" ON dividends;
 CREATE POLICY "Users can delete their own dividends" ON dividends FOR DELETE USING (auth.uid() = user_id);
