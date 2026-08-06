@@ -32,8 +32,8 @@ export function BankSyncModal({ open, onOpenChange, onSyncComplete }: BankSyncMo
         try {
           const connectToken = await openFinanceService.getConnectToken();
           setToken(connectToken);
-        } catch (error) {
-          toast.error('Erro ao conectar ao provedor de Open Finance.');
+        } catch (error: any) {
+          toast.error(error.message || 'Erro ao conectar ao provedor de Open Finance.');
           onOpenChange(false);
         } finally {
           setLoadingToken(false);

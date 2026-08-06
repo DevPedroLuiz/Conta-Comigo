@@ -1,3 +1,5 @@
+import { supabase } from '../../../core/services/supabase';
+
 export interface SyncTransactionData {
   id: string;
   description: string;
@@ -13,7 +15,18 @@ export interface IOpenFinanceProvider {
 
 export class PluggySandboxAdapter implements IOpenFinanceProvider {
   async getConnectToken(): Promise<string> {
-    const response = await fetch('/api/pluggy-token');
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error('Usuário não autenticado.');
+    }
+
+    const response = await fetch('/api/pluggy-token', {
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`
+      }
+    });
+
     if (!response.ok) {
       throw new Error('Failed to fetch connect token');
     }
