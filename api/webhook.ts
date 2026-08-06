@@ -1,12 +1,19 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { PluggyClient } from 'pluggy-sdk';
 import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 
 const PLUGGY_WEBHOOK_SECRET = process.env.PLUGGY_WEBHOOK_SECRET;
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const PLUGGY_CLIENT_ID = process.env.VITE_PLUGGY_CLIENT_ID;
 const PLUGGY_CLIENT_SECRET = process.env.VITE_PLUGGY_CLIENT_SECRET;
+
+// Zod Schema for Webhook Payload
+const WebhookPayloadSchema = z.object({
+  event: z.string({ required_error: 'Event is required' }),
+  itemId: z.string({ required_error: 'itemId is required' }),
+}).passthrough(); // allows other fields but requires these
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -20,11 +27,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const { event, itemId } = req.body;
-
-  if (!event || !itemId) {
-    return res.status(400).json({ error: 'Bad Request: Missing event or itemId' });
+  // Nível 2: Validação da estrutura do Payload via Zod
+  const validation = WebhookPayloadSchema.safeParse(req.body);
+  if (!validation.success) {
+    console.error('Webhook Payload Inválido:', validation.error.format());
+    return res.status(400).json({ error: 'Bad Request: Invalid Payload', details: validation.error.format() });
   }
+
+  const { event, itemId } = validation.data;
 
   // Apenas processamos eventos que possam afetar transações e saldo
   if (event !== 'TRANSACTION_CREATED' && event !== 'ITEM/UPDATED' && event !== 'transactions/deleted') {
@@ -39,12 +49,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // Usamos o SERVICE_ROLE_KEY para ignorar as restrições RLS em processamento de background
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
     const pluggyClient = new PluggyClient({
       clientId: PLUGGY_CLIENT_ID,
       clientSecret: PLUGGY_CLIENT_SECRET,
     });
 
-    // Nível 2: Padrão Fetch-back
+    // Padrão Fetch-back
     // Em vez de usar os dados do payload, que poderiam ser falsificados ou incompletos, 
     // nós fazemos uma chamada segura de volta para a API da Pluggy.
     
@@ -61,7 +72,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .single();
 
       if (accountError || !dbAccount) {
-        // Se a conta não existe ainda ou não foi sincronizada, não podemos inserir a transação.
         console.warn(`Account ${pluggyAccount.id} not found in database. Skipping.`);
         continue;
       }
@@ -70,12 +80,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const transactionsResponse = await pluggyClient.fetchTransactions(pluggyAccount.id);
       const transactions = transactionsResponse.results;
 
-      // Buscar a categoria padrão "Outros" ou de "Despesa" daquele usuário
-      const { data: defaultCategory } = await supabase
+      // Buscar categorias padrão para INCOME e EXPENSE para aquele usuário
+      const { data: expenseCategory } = await supabase
         .from('categories')
         .select('id')
         .eq('user_id', dbAccount.user_id)
         .eq('type', 'EXPENSE')
+        .limit(1)
+        .single();
+        
+      const { data: incomeCategory } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('user_id', dbAccount.user_id)
+        .eq('type', 'INCOME')
         .limit(1)
         .single();
 
@@ -91,11 +109,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
          if (finalAmount === 0) continue;
 
          const type = isExpense ? 'EXPENSE' : 'INCOME';
+         
+         // Usa a categoria correspondente ao tipo correto, evitando classificar INCOME como EXPENSE
+         const categoryId = type === 'EXPENSE' ? expenseCategory?.id : incomeCategory?.id;
 
          const newTx = {
             user_id: dbAccount.user_id,
             account_id: dbAccount.id,
-            category_id: defaultCategory?.id || null, // Tratamento caso não tenha categoria
+            category_id: categoryId || null,
             type: type,
             description: pluggyTx.description || 'Transação Importada',
             amount: finalAmount,
