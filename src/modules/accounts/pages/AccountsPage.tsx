@@ -85,6 +85,7 @@ export function AccountsPage() {
       
       // Reload accounts data to reflect new balance
       loadData();
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
