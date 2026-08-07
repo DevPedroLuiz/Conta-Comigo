@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '../../../core/ui/components/button';
 import { parseOFX, parseCSV, ParsedTransaction } from '../utils/ofxParser';
 import { parsePDF } from '../utils/pdfParser';
-import { UploadCloud, CheckCircle2 } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { transactionService } from '../services/TransactionService';
 import { accountService } from '../../accounts/services/AccountService';
@@ -30,24 +30,31 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
   const [dragActive, setDragActive] = useState(false);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   
-  // Buscar contas
   const { data: accountsResponse, isLoading: isLoadingAccounts } = useQuery({
     queryKey: ['accounts', user?.id],
-    queryFn: () => accountService.getAccounts(user!.id),
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await accountService.getAccounts(user.id);
+      if (error) throw new Error(error.message);
+      return data;
+    },
     enabled: open && !!user,
   });
 
-  // Buscar categorias
   const { data: categoriesResponse, isLoading: isLoadingCategories } = useQuery({
     queryKey: ['categories', user?.id],
-    queryFn: () => categoryService.getCategories(user!.id),
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await categoryService.getCategories(user.id);
+      if (error) throw new Error(error.message);
+      return data;
+    },
     enabled: open && !!user,
   });
 
-  const accounts = accountsResponse?.data || [];
-  const categories = categoriesResponse?.data || [];
+  const accounts = accountsResponse || [];
+  const categories = categoriesResponse || [];
   const defaultCategory = categories.find(c => c.type === 'EXPENSE') || categories[0] || null;
-
   const isLoadingForm = isLoadingAccounts || isLoadingCategories;
 
   useEffect(() => {
@@ -314,3 +321,4 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
     </Dialog>
   );
 }
+
