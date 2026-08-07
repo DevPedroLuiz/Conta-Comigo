@@ -231,6 +231,7 @@ export function TransactionsPage() {
         open={isImportModalOpen}
         onOpenChange={setIsImportModalOpen}
         accounts={accountsData?.data || []}
+        userId={user?.id || ''}
       />
 
       <Dialog open={isFormModalOpen} onOpenChange={setIsFormModalOpen}>

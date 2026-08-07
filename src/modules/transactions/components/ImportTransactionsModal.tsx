@@ -11,7 +11,6 @@ import { Button } from '../../../core/ui/components/button';
 import { parseOFX, parseCSV, ParsedTransaction } from '../utils/ofxParser';
 import { parsePDF } from '../utils/pdfParser';
 import { UploadCloud, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
-import { useAuth } from '../../auth/hooks/useAuth';
 import { transactionService } from '../services/TransactionService';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -28,14 +27,15 @@ interface ImportTransactionsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   accounts?: any[];
+  userId: string;
 }
 
 export function ImportTransactionsModal({
   open,
   onOpenChange,
   accounts = [],
+  userId,
 }: ImportTransactionsModalProps) {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -132,7 +132,7 @@ export function ImportTransactionsModal({
 
   const handleImport = async () => {
     // Validações com feedback visual
-    if (!user?.id) {
+    if (!userId) {
       toast.error('Usuário não autenticado ou sessão inválida.');
       return;
     }
@@ -144,18 +144,18 @@ export function ImportTransactionsModal({
     setIsLoading(true);
 
     try {
-      const payload = parsedData.map(tx => ({
-        user_id: user.id,
+      const payload = parsedData.map((tx) => ({
+        user_id: userId,
         account_id: selectedAccountId,
         type: tx.type,
         description: tx.description,
         amount: tx.amount,
         date: tx.date,
-        status: 'POSTED',
+        status: 'PAID',
         pluggy_transaction_id: tx.fitId || null,
       }));
 
-      const { error } = await transactionService.importBatchTransactions(user.id, payload);
+      const { error } = await transactionService.importBatchTransactions(userId, payload);
 
       if (error) {
         console.error('Erro do Supabase:', error);
