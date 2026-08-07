@@ -23,7 +23,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ categorizations: [] });
     }
 
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ 
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      } 
+    });
 
     const prompt = `
 Você é um assistente financeiro especialista em categorizar transações.
@@ -65,7 +72,7 @@ ${descriptions.map((d: string) => `- ${d}`).join('\n')}
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         const response = await ai.models.generateContent({
-          model: 'gemini-1.5-flash',
+          model: 'gemini-3.6-flash',
           contents: prompt,
           config: {
             responseMimeType: 'application/json',
