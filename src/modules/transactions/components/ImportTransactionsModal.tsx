@@ -1,72 +1,57 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../../core/ui/components/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../../../core/ui/components/dialog';
 import { Button } from '../../../core/ui/components/button';
 import { parseOFX, parseCSV, ParsedTransaction } from '../utils/ofxParser';
 import { parsePDF } from '../utils/pdfParser';
 import { UploadCloud, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { transactionService } from '../services/TransactionService';
-import { accountService } from '../../accounts/services/AccountService';
-import { categoryService } from '../../categories/services/CategoryService';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../core/ui/components/select';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../../core/ui/components/select';
 import { Label } from '../../../core/ui/components/label';
 import { toast } from 'sonner';
 
 interface ImportTransactionsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  accounts?: any[];
 }
 
-export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactionsModalProps) {
+export function ImportTransactionsModal({
+  open,
+  onOpenChange,
+  accounts = [],
+}: ImportTransactionsModalProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [parsedData, setParsedData] = useState<ParsedTransaction[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
-  
-  const { data: accountsResponse, isLoading: isLoadingAccounts } = useQuery({
-    queryKey: ['accounts', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      const { data, error } = await accountService.getAccounts(user.id);
-      if (error) throw new Error(error.message);
-      return data;
-    },
-    enabled: open && !!user,
-  });
-
-  const { data: categoriesResponse, isLoading: isLoadingCategories } = useQuery({
-    queryKey: ['categories', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      const { data, error } = await categoryService.getCategories(user.id);
-      if (error) throw new Error(error.message);
-      return data;
-    },
-    enabled: open && !!user,
-  });
-
-  const accounts = accountsResponse || [];
-  const categories = categoriesResponse || [];
-  const defaultCategory = categories.find(c => c.type === 'EXPENSE') || categories[0] || null;
-  const isLoadingForm = isLoadingAccounts || isLoadingCategories;
 
   useEffect(() => {
-    if (open && !isLoadingForm) {
+    if (open) {
       if (!selectedAccountId && accounts.length > 0) {
         setSelectedAccountId(accounts[0].id);
       }
-      if (!selectedCategoryId && defaultCategory) {
-        setSelectedCategoryId(defaultCategory.id);
-      }
     }
-  }, [open, isLoadingForm, accounts, categories, defaultCategory, selectedAccountId, selectedCategoryId]);
+  }, [open, accounts, selectedAccountId]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -97,7 +82,7 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
     try {
       setIsProcessingFile(true);
       toast.info('Processando arquivo, por favor aguarde...', { id: 'processing-file' });
-      
+
       let transactions: ParsedTransaction[] = [];
       if (file.name.toLowerCase().endsWith('.ofx')) {
         const text = await file.text();
@@ -113,10 +98,12 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
         setIsProcessingFile(false);
         return;
       }
-      
+
       if (transactions.length === 0) {
         toast.dismiss('processing-file');
-        toast.error('Nenhuma transação encontrada ou falha ao ler o arquivo. Se for um PDF, certifique-se de que não é uma imagem escaneada.');
+        toast.error(
+          'Nenhuma transação encontrada ou falha ao ler o arquivo. Se for um PDF, certifique-se de que não é uma imagem escaneada.',
+        );
         setIsProcessingFile(false);
         return;
       }
@@ -124,13 +111,10 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
       setParsedData(transactions);
       toast.dismiss('processing-file');
       toast.success('Arquivo lido com sucesso!');
-      
+
       // Auto-select first account if none selected
       if (!selectedAccountId && accounts.length > 0) {
         setSelectedAccountId(accounts[0].id);
-      }
-      if (!selectedCategoryId && defaultCategory) {
-        setSelectedCategoryId(defaultCategory.id);
       }
     } catch (error) {
       toast.dismiss('processing-file');
@@ -147,39 +131,52 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
   };
 
   const handleImport = async () => {
-    if (!user || !selectedAccountId) return;
+    // Validações com feedback visual
+    if (!user?.id) {
+      toast.error('Usuário não autenticado ou sessão inválida.');
+      return;
+    }
+    if (!selectedAccountId) {
+      toast.error('Por favor, selecione uma conta de destino.');
+      return;
+    }
+
     setIsLoading(true);
 
-    const payload = parsedData.map(tx => ({
-      user_id: user.id,
-      account_id: selectedAccountId,
-      category_id: selectedCategoryId || defaultCategory?.id,
-      type: tx.type,
-      description: tx.description,
-      amount: tx.amount,
-      date: tx.date,
-      status: 'POSTED',
-      pluggy_transaction_id: tx.fitId || null,
-    }));
+    try {
+      const payload = parsedData.map(tx => ({
+        user_id: user.id,
+        account_id: selectedAccountId,
+        type: tx.type,
+        description: tx.description,
+        amount: tx.amount,
+        date: tx.date,
+        status: 'POSTED',
+        pluggy_transaction_id: tx.fitId || null,
+      }));
 
-    const { error } = await transactionService.importBatchTransactions(user.id, payload);
+      const { error } = await transactionService.importBatchTransactions(user.id, payload);
 
-    setIsLoading(false);
-
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success(`${parsedData.length} transações importadas com sucesso!`);
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      resetAndClose();
+      if (error) {
+        console.error('Erro do Supabase:', error);
+        toast.error(error?.message || 'Erro interno ao salvar transações no banco.');
+      } else {
+        toast.success(`${parsedData.length} transações importadas com sucesso!`);
+        queryClient.invalidateQueries({ queryKey: ['transactions'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        resetAndClose();
+      }
+    } catch (err: any) {
+      console.error('Erro de Execução:', err);
+      toast.error(err?.message || 'Ocorreu um erro inesperado no sistema.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const resetAndClose = () => {
     setParsedData([]);
     setSelectedAccountId('');
-    setSelectedCategoryId('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -187,12 +184,19 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
   };
 
   return (
-    <Dialog open={open} onOpenChange={(val) => { if (!val) resetAndClose(); else onOpenChange(val); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(val) => {
+        if (!val) resetAndClose();
+        else onOpenChange(val);
+      }}
+    >
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Importar Transações</DialogTitle>
           <DialogDescription>
-            Faça upload de um arquivo .ofx, .csv ou .pdf do seu banco para importar transações automaticamente. O PDF deve conter texto selecionável (não escaneado).
+            Faça upload de um arquivo .ofx, .csv ou .pdf do seu banco para importar transações
+            automaticamente. O PDF deve conter texto selecionável (não escaneado).
           </DialogDescription>
         </DialogHeader>
 
@@ -226,7 +230,11 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
             <p className="text-xs text-muted-foreground text-center mb-4">
               ou clique para selecionar do seu computador (OFX, CSV, PDF)
             </p>
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessingFile}>
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isProcessingFile}
+            >
               {isProcessingFile ? 'Processando...' : 'Selecionar Arquivo'}
             </Button>
           </div>
@@ -236,41 +244,29 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
               <CheckCircle2 className="h-6 w-6 text-primary" />
               <div>
                 <p className="text-sm font-medium text-primary">Arquivo processado com sucesso</p>
-                <p className="text-xs text-primary/80">{parsedData.length} transações encontradas prontas para importação.</p>
+                <p className="text-xs text-primary/80">
+                  {parsedData.length} transações encontradas prontas para importação.
+                </p>
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-1">
               <div className="space-y-2">
                 <Label>Conta de Destino</Label>
-                <Select value={selectedAccountId} onValueChange={setSelectedAccountId} disabled={isLoadingForm}>
+                <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
                   <SelectTrigger>
-                    <SelectValue placeholder={isLoadingForm ? "Carregando contas..." : "Selecione uma conta"} />
+                    <SelectValue placeholder="Selecione uma conta" />
                   </SelectTrigger>
                   <SelectContent>
-                    {accounts.length === 0 && !isLoadingForm ? (
-                      <SelectItem value="empty" disabled>Nenhuma conta cadastrada</SelectItem>
+                    {accounts.length === 0 ? (
+                      <SelectItem value="empty" disabled>
+                        Nenhuma conta cadastrada
+                      </SelectItem>
                     ) : (
-                      accounts.map(acc => (
-                        <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Categoria Padrão</Label>
-                <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId} disabled={isLoadingForm}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={isLoadingForm ? "Carregando categorias..." : "Selecione a categoria"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.length === 0 && !isLoadingForm ? (
-                      <SelectItem value="empty" disabled>Nenhuma categoria cadastrada</SelectItem>
-                    ) : (
-                      categories.map(cat => (
-                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                      accounts.map((acc) => (
+                        <SelectItem key={acc.id} value={acc.id}>
+                          {acc.name}
+                        </SelectItem>
                       ))
                     )}
                   </SelectContent>
@@ -292,9 +288,14 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
                     <tr key={idx} className="hover:bg-muted/50">
                       <td className="px-4 py-2 whitespace-nowrap">{tx.date}</td>
                       <td className="px-4 py-2 truncate max-w-[200px]">{tx.description}</td>
-                      <td className={`px-4 py-2 text-right whitespace-nowrap ${tx.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`}>
+                      <td
+                        className={`px-4 py-2 text-right whitespace-nowrap ${tx.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`}
+                      >
                         {tx.type === 'INCOME' ? '+' : '-'}
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(tx.amount)}
+                        {new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        }).format(tx.amount)}
                       </td>
                     </tr>
                   ))}
@@ -310,7 +311,9 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
         )}
 
         <DialogFooter>
-          <Button variant="ghost" onClick={resetAndClose}>Cancelar</Button>
+          <Button variant="ghost" onClick={resetAndClose}>
+            Cancelar
+          </Button>
           {parsedData.length > 0 && (
             <Button onClick={handleImport} disabled={!selectedAccountId || isLoading}>
               {isLoading ? 'Importando...' : 'Confirmar Importação'}
@@ -321,4 +324,3 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
     </Dialog>
   );
 }
-

@@ -33,11 +33,11 @@ export function TransactionsPage() {
   const user = useUser();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  
+
   // State for filters
   const [filterType, setFilterType] = useState<TransactionType | 'ALL'>('ALL');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  
+
   const [isCategorizing, setIsCategorizing] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -48,11 +48,15 @@ export function TransactionsPage() {
   const endDate = format(endOfMonth(currentDate), 'yyyy-MM-dd');
 
   // Using TanStack Query for reactive and cached fetching
-  const { data: transactions = [], isLoading, refetch } = useTransactions({
+  const {
+    data: transactions = [],
+    isLoading,
+    refetch,
+  } = useTransactions({
     userId: user?.id || '',
     type: filterType === 'ALL' ? undefined : filterType,
     startDate,
-    endDate
+    endDate,
   });
 
   // Queries para o formulário
@@ -80,7 +84,12 @@ export function TransactionsPage() {
     if (!user) return;
 
     const toCategorize = transactions.filter(
-      (t) => !t.category_id || t.category_id === null || String(t.category_id) === 'null' || t.categories?.name === 'Outros' || t.categories?.name === 'Sem Categoria'
+      (t) =>
+        !t.category_id ||
+        t.category_id === null ||
+        String(t.category_id) === 'null' ||
+        t.categories?.name === 'Outros' ||
+        t.categories?.name === 'Sem Categoria',
     );
 
     if (toCategorize.length === 0) {
@@ -93,18 +102,20 @@ export function TransactionsPage() {
 
     try {
       const { data: categories } = await categoryService.getCategories(user.id);
-      
+
       if (!categories || categories.length === 0) {
         toast.error('Você precisa ter categorias cadastradas.', { id: toastId });
         setIsCategorizing(false);
         return;
       }
 
-      const uniqueDescriptions: string[] = Array.from(new Set(toCategorize.map((t) => t.description)));
-      
+      const uniqueDescriptions: string[] = Array.from(
+        new Set(toCategorize.map((t) => t.description)),
+      );
+
       const mapping = await categorizeTransactions(
-        uniqueDescriptions, 
-        categories.map(c => ({ id: c.id, name: c.name }))
+        uniqueDescriptions,
+        categories.map((c) => ({ id: c.id, name: c.name })),
       );
 
       let updatedCount = 0;
@@ -115,7 +126,7 @@ export function TransactionsPage() {
           const { error } = await transactionService.updateTransactionCategory(
             user.id,
             transaction.id,
-            suggestedCategoryId
+            suggestedCategoryId,
           );
           if (!error) updatedCount++;
         }
@@ -124,10 +135,9 @@ export function TransactionsPage() {
       await Promise.all(updatePromises);
 
       toast.success(`${updatedCount} transações categorizadas com sucesso!`, { id: toastId });
-      
+
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      
     } catch (error) {
       toast.error('Erro ao categorizar transações. Tente novamente.', { id: toastId });
     } finally {
@@ -156,12 +166,14 @@ export function TransactionsPage() {
   return (
     <PageTransition className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Transações</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+          Transações
+        </h2>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <AnimatedInteraction>
-            <Button 
-              variant="secondary" 
-              onClick={handleCategorize} 
+            <Button
+              variant="secondary"
+              onClick={handleCategorize}
               disabled={isCategorizing || isLoading || transactions.length === 0}
               className="w-full bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
             >
@@ -174,13 +186,20 @@ export function TransactionsPage() {
             </Button>
           </AnimatedInteraction>
           <AnimatedInteraction>
-            <Button variant="outline" className="w-full border-zinc-200 dark:border-zinc-800" onClick={() => setIsImportModalOpen(true)}>
+            <Button
+              variant="outline"
+              className="w-full border-zinc-200 dark:border-zinc-800"
+              onClick={() => setIsImportModalOpen(true)}
+            >
               <Upload className="mr-2 h-4 w-4" />
               Importar
             </Button>
           </AnimatedInteraction>
           <AnimatedInteraction>
-            <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" onClick={() => setIsFormModalOpen(true)}>
+            <Button
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+              onClick={() => setIsFormModalOpen(true)}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Nova transação
             </Button>
@@ -188,22 +207,22 @@ export function TransactionsPage() {
         </div>
       </div>
 
-      <TransactionFilters 
-        type={filterType} 
+      <TransactionFilters
+        type={filterType}
         onChangeType={setFilterType}
         currentDate={currentDate}
-        onChangeDate={setCurrentDate} 
+        onChangeDate={setCurrentDate}
       />
 
-      <TransactionList 
-        transactions={transactions} 
-        isLoading={isLoading} 
-        onEdit={handleEdit} 
-        onDelete={handleDelete} 
+      <TransactionList
+        transactions={transactions}
+        isLoading={isLoading}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
-      
-      <BankSyncModal 
-        open={isSyncModalOpen} 
+
+      <BankSyncModal
+        open={isSyncModalOpen}
         onOpenChange={setIsSyncModalOpen}
         onSyncComplete={() => queryClient.invalidateQueries({ queryKey: ['transactions'] })}
       />
@@ -211,6 +230,7 @@ export function TransactionsPage() {
       <ImportTransactionsModal
         open={isImportModalOpen}
         onOpenChange={setIsImportModalOpen}
+        accounts={accountsData?.data || []}
       />
 
       <Dialog open={isFormModalOpen} onOpenChange={setIsFormModalOpen}>
@@ -218,7 +238,7 @@ export function TransactionsPage() {
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">Nova Transação</DialogTitle>
           </DialogHeader>
-          <TransactionForm 
+          <TransactionForm
             accounts={accountsData?.data || []}
             categories={categoriesData?.data || []}
             creditCards={creditCardsData?.data || []}
