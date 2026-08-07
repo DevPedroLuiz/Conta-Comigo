@@ -3,9 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '../../../core/ui/components/button';
 import { parseOFX, parseCSV, ParsedTransaction } from '../utils/ofxParser';
 import { parsePDF } from '../utils/pdfParser';
-import { UploadCloud, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
+import { UploadCloud, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { transactionService } from '../services/TransactionService';
+import { accountService } from '../../accounts/services/AccountService';
+import { categoryService } from '../../categories/services/CategoryService';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../core/ui/components/select';
 import { Label } from '../../../core/ui/components/label';
@@ -28,23 +30,28 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
   const [dragActive, setDragActive] = useState(false);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   
-  const { data: formData, isLoading: isLoadingForm } = useQuery({
-    queryKey: ['transaction-form-data', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      const { data, error } = await transactionService.getFormData(user.id);
-      if (error) throw new Error(error.message);
-      return data;
-    },
+  // Buscar contas
+  const { data: accountsResponse, isLoading: isLoadingAccounts } = useQuery({
+    queryKey: ['accounts', user?.id],
+    queryFn: () => accountService.getAccounts(user!.id),
     enabled: open && !!user,
   });
 
-  const accounts = formData?.accounts || [];
-  const categories = formData?.categories || [];
+  // Buscar categorias
+  const { data: categoriesResponse, isLoading: isLoadingCategories } = useQuery({
+    queryKey: ['categories', user?.id],
+    queryFn: () => categoryService.getCategories(user!.id),
+    enabled: open && !!user,
+  });
+
+  const accounts = accountsResponse?.data || [];
+  const categories = categoriesResponse?.data || [];
   const defaultCategory = categories.find(c => c.type === 'EXPENSE') || categories[0] || null;
 
+  const isLoadingForm = isLoadingAccounts || isLoadingCategories;
+
   useEffect(() => {
-    if (open && formData) {
+    if (open && !isLoadingForm) {
       if (!selectedAccountId && accounts.length > 0) {
         setSelectedAccountId(accounts[0].id);
       }
@@ -52,7 +59,7 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
         setSelectedCategoryId(defaultCategory.id);
       }
     }
-  }, [open, formData, accounts, categories, defaultCategory, selectedAccountId, selectedCategoryId]);
+  }, [open, isLoadingForm, accounts, categories, defaultCategory, selectedAccountId, selectedCategoryId]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -307,4 +314,3 @@ export function ImportTransactionsModal({ open, onOpenChange }: ImportTransactio
     </Dialog>
   );
 }
-
