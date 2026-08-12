@@ -225,25 +225,79 @@ export function CreditCardInvoicesPage() {
             </SheetDescription>
           </SheetHeader>
 
+          {viewingInvoice && (
+            <div className="mb-6 grid grid-cols-3 gap-2 rounded-2xl bg-muted p-4">
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Gasto</span>
+                <span className="text-sm font-bold mt-1">R$ {(viewingInvoice as any).total_expenses?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}</span>
+              </div>
+              <div className="flex flex-col border-l border-border pl-2">
+                <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Pago</span>
+                <span className="text-sm font-bold text-green-500 mt-1">R$ {(viewingInvoice as any).total_payments?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}</span>
+              </div>
+              <div className="flex flex-col border-l border-border pl-2">
+                <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Restante</span>
+                <span className="text-sm font-bold mt-1">R$ {viewingInvoice.total_amount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}</span>
+              </div>
+            </div>
+          )}
+
           {viewingInvoice?.transactions?.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground border border-dashed rounded-2xl bg-muted/30">
               <p>Nenhuma transação registrada nesta fatura.</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {viewingInvoice?.transactions?.map((tx: any) => (
-                <div key={tx.id} className="flex justify-between items-center p-4 border rounded-2xl bg-card">
-                  <div className="flex flex-col">
-                    <span className="font-medium text-sm">{tx.description}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(tx.date + 'T00:00:00').toLocaleDateString('pt-BR')}
-                    </span>
-                  </div>
-                  <div className={`font-semibold ${tx.type === 'INCOME' ? 'text-green-500' : 'text-foreground'}`}>
-                    {tx.type === 'INCOME' ? '+' : '-'} R$ {Math.abs(tx.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                </div>
-              ))}
+            <div className="space-y-6">
+              {(() => {
+                const expenses = viewingInvoice?.transactions?.filter((tx: any) => tx.type === 'EXPENSE' && !tx.is_internal_transfer) || [];
+                const payments = viewingInvoice?.transactions?.filter((tx: any) => tx.type === 'INCOME' || tx.type === 'TRANSFER_IN' || tx.type === 'TRANSFER_OUT' || tx.is_internal_transfer) || [];
+
+                return (
+                  <>
+                    {expenses.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Despesas do Ciclo</h4>
+                        <div className="space-y-2">
+                          {expenses.map((tx: any) => (
+                            <div key={tx.id} className="flex justify-between items-center p-3 border rounded-xl bg-card">
+                              <div className="flex flex-col">
+                                <span className="font-medium text-sm">{tx.description}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(tx.date + 'T00:00:00').toLocaleDateString('pt-BR')}
+                                </span>
+                              </div>
+                              <div className="font-semibold text-foreground">
+                                - R$ {Math.abs(tx.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {payments.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Pagamentos e Créditos</h4>
+                        <div className="space-y-2">
+                          {payments.map((tx: any) => (
+                            <div key={tx.id} className="flex justify-between items-center p-3 border rounded-xl bg-card">
+                              <div className="flex flex-col">
+                                <span className="font-medium text-sm">{tx.description}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(tx.date + 'T00:00:00').toLocaleDateString('pt-BR')}
+                                </span>
+                              </div>
+                              <div className="font-semibold text-green-500">
+                                + R$ {Math.abs(tx.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
         </SheetContent>

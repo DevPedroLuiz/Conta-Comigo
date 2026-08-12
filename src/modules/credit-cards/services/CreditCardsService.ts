@@ -75,12 +75,19 @@ export class CreditCardsService {
       if (!card) throw new Error('Credit card not found');
       const transactions = await creditCardsRepository.getCardTransactions(creditCardId);
       
-      const invoiceTotals: Record<string, number> = {};
+      const invoiceTotals: Record<string, { expenses: number, payments: number }> = {};
       const invoiceTransactions: Record<string, any[]> = {};
       
       for (const tx of transactions) {
         const rawAmount = Math.abs(tx.amount);
-        const amount = tx.type === 'EXPENSE' ? rawAmount : -rawAmount;
+        
+        let isPayment = false;
+        if (tx.type === 'TRANSFER_IN' || tx.type === 'TRANSFER_OUT' || tx.is_internal_transfer) {
+           isPayment = true;
+        } else if (tx.type === 'INCOME') {
+           isPayment = true;
+        }
+        
         const txDate = new Date(tx.date + 'T00:00:00');
         let month = txDate.getMonth() + 1;
         let year = txDate.getFullYear();
@@ -95,13 +102,23 @@ export class CreditCardsService {
         }
         
         const key = `${year}-${month}`;
-        invoiceTotals[key] = (invoiceTotals[key] || 0) + amount;
+        
+        if (!invoiceTotals[key]) {
+          invoiceTotals[key] = { expenses: 0, payments: 0 };
+        }
+        
+        if (isPayment) {
+          invoiceTotals[key].payments += rawAmount;
+        } else {
+          invoiceTotals[key].expenses += rawAmount;
+        }
         
         if (!invoiceTransactions[key]) {
           invoiceTransactions[key] = [];
         }
         invoiceTransactions[key].push(tx);
       }
+
       
       let existingInvoices = await creditCardsRepository.getInvoices(creditCardId);
 
@@ -135,14 +152,16 @@ export class CreditCardsService {
         const isPaid = (inv as any).status === 'PAID' || paidInvoiceIds.has(inv.id);
         
         // Ensure total amount is never negative, in case of refunds exceeding expenses
-        const calculatedTotal = invoiceTotals[key] || 0;
-        const totalAmount = calculatedTotal < 0 ? 0 : calculatedTotal;
+        const totals = invoiceTotals[key] || { expenses: 0, payments: 0 };
+        const totalAmount = Math.max(0, totals.expenses - totals.payments);
         
         return {
           ...inv,
+          total_expenses: totals.expenses,
+          total_payments: totals.payments,
           total_amount: totalAmount,
           transactions: invoiceTransactions[key] || [],
-          status: isPaid ? 'PAID' : 'OPEN'
+          status: isPaid ? 'PAID' : (inv as any).status || 'OPEN'
         };
       });
       return { data, error: null };
