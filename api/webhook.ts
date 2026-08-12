@@ -64,16 +64,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const accounts = accountsResponse.results;
 
     for (const pluggyAccount of accounts) {
-      // Procurar a conta no Supabase usando o ID da Pluggy
-      const { data: dbAccount, error: accountError } = await supabase
+      let targetAccountId = null;
+      let targetCreditCardId = null;
+      let targetUserId = null;
+      let isCreditCard = false;
+
+      // Primeiro procura em accounts
+      const { data: dbAccount } = await supabase
         .from('accounts')
         .select('id, user_id, type')
         .eq('pluggy_account_id', pluggyAccount.id)
         .single();
 
-      if (accountError || !dbAccount) {
-        console.warn(`Account ${pluggyAccount.id} not found in database. Skipping.`);
-        continue;
+      if (dbAccount) {
+         targetAccountId = dbAccount.id;
+         targetUserId = dbAccount.user_id;
+         isCreditCard = dbAccount.type === 'CREDIT_CARD' || dbAccount.type === 'credit_card';
+      } else {
+         // Tenta em credit_cards se não encontrar em accounts
+         const { data: dbCreditCard } = await supabase
+           .from('credit_cards')
+           .select('id, user_id')
+           .eq('pluggy_account_id', pluggyAccount.id)
+           .single();
+           
+         if (dbCreditCard) {
+            targetCreditCardId = dbCreditCard.id;
+            targetUserId = dbCreditCard.user_id;
+            isCreditCard = true;
+         } else {
+            console.warn(`Account ${pluggyAccount.id} not found in database. Skipping.`);
+            continue;
+         }
       }
 
       // Buscar transações reais da conta diretamente da Pluggy
@@ -84,7 +106,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data: expenseCategory } = await supabase
         .from('categories')
         .select('id')
-        .eq('user_id', dbAccount.user_id)
+        .eq('user_id', targetUserId)
         .eq('type', 'EXPENSE')
         .limit(1)
         .single();
@@ -92,7 +114,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data: incomeCategory } = await supabase
         .from('categories')
         .select('id')
-        .eq('user_id', dbAccount.user_id)
+        .eq('user_id', targetUserId)
         .eq('type', 'INCOME')
         .limit(1)
         .single();
@@ -100,13 +122,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       for (const pluggyTx of transactions) {
          const amountValue = pluggyTx.amount;
          
-         // A regra do nosso banco exige amount > 0, e type como 'INCOME' ou 'EXPENSE'.
-         // Na Pluggy, despesas são valores negativos e receitas valores positivos.
-         const isCreditCard = dbAccount.type === 'CREDIT_CARD' || dbAccount.type === 'credit_card';
          let isExpense = amountValue < 0;
-         if (isCreditCard) {
-            isExpense = amountValue > 0;
+         if (pluggyTx.type === 'DEBIT') {
+             isExpense = true;
+         } else if (pluggyTx.type === 'CREDIT') {
+             isExpense = false;
+         } else if (isCreditCard) {
+             isExpense = amountValue > 0;
          }
+
          const finalAmount = Math.abs(amountValue);
          
          // Prevenindo inserir amount 0 se houver restrição
@@ -117,16 +141,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
          // Usa a categoria correspondente ao tipo correto, evitando classificar INCOME como EXPENSE
          const categoryId = type === 'EXPENSE' ? expenseCategory?.id : incomeCategory?.id;
 
+         const mappedStatus = pluggyTx.status === 'PENDING' ? 'UNPAID' : 'PAID';
+
          const newTx = {
-            user_id: dbAccount.user_id,
-            account_id: dbAccount.id,
+            user_id: targetUserId,
+            account_id: targetAccountId,
+            credit_card_id: targetCreditCardId,
             category_id: categoryId || null,
             type: type,
             description: pluggyTx.description || 'Transação Importada',
             amount: finalAmount,
             date: new Date(pluggyTx.date).toISOString().substring(0, 10), // Apenas 'YYYY-MM-DD'
             pluggy_transaction_id: pluggyTx.id,
-            status: pluggyTx.status || 'POSTED'
+            status: mappedStatus
          };
 
          // Realiza o Upsert. Se a transação já existir pelo pluggy_transaction_id, ele atualiza,

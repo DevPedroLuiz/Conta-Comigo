@@ -30,13 +30,16 @@ export interface ExpenseByCategory {
 
 export class DashboardRepository {
   async getAccountsCount(userId: string): Promise<number> {
-    const { count, error } = await supabase
+    const { data, error } = await supabase
       .from('accounts')
-      .select('*', { count: 'exact', head: true })
+      .select('id')
       .eq('user_id', userId);
     
-    if (error) throw error;
-    return count || 0;
+    if (error) {
+       console.error("Error fetching accounts count:", error);
+       return 0;
+    }
+    return data?.length || 0;
   }
 
   async getCurrentBalance(userId: string): Promise<number> {

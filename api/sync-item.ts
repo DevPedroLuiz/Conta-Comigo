@@ -172,7 +172,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       for (const pluggyTx of transactions) {
          const amountValue = pluggyTx.amount;
-         const isExpense = amountValue < 0;
+         
+         let isExpense = amountValue < 0;
+         if (pluggyTx.type === 'DEBIT') {
+             isExpense = true;
+         } else if (pluggyTx.type === 'CREDIT') {
+             isExpense = false;
+         } else if (isCreditCard) {
+             isExpense = amountValue > 0;
+         }
+
          const finalAmount = Math.abs(amountValue);
          
          if (finalAmount === 0) continue;
