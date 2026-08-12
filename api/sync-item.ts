@@ -1,6 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { PluggyClient } from 'pluggy-sdk';
 import { createClient } from '@supabase/supabase-js';
+import { TransactionClassificationEngine } from '../src/modules/transactions/services/TransactionClassificationEngine';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -188,6 +189,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
          
          const type = isExpense ? 'EXPENSE' : 'INCOME';
          
+         const classification = TransactionClassificationEngine.classify(
+            pluggyTx.description || '',
+            type
+         );
+         
+         const finalType = classification.type || type;
+         
          const mappedStatus = pluggyTx.status === 'PENDING' ? 'UNPAID' : 'PAID';
          
          const newTx = {
@@ -195,12 +203,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             account_id: targetAccountId,
             credit_card_id: targetCreditCardId,
             category_id: defaultCategory?.id || null,
-            type: type,
+            type: finalType,
             description: pluggyTx.description || 'Transação Importada',
             amount: finalAmount,
             date: new Date(pluggyTx.date).toISOString().substring(0, 10),
             pluggy_transaction_id: pluggyTx.id,
-            status: mappedStatus
+            status: mappedStatus,
+            is_internal_transfer: classification.is_internal_transfer,
+            is_subscription: classification.is_subscription,
+            is_investment: classification.is_investment
          };
 
          const { error: upsertError } = await supabase

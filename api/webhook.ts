@@ -2,6 +2,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { PluggyClient } from 'pluggy-sdk';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { TransactionClassificationEngine } from '../src/modules/transactions/services/TransactionClassificationEngine';
 
 const PLUGGY_WEBHOOK_SECRET = process.env.PLUGGY_WEBHOOK_SECRET;
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
@@ -138,8 +139,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
          const type = isExpense ? 'EXPENSE' : 'INCOME';
          
+         const classification = TransactionClassificationEngine.classify(
+            pluggyTx.description || '',
+            type
+         );
+         
+         const finalType = classification.type || type;
+         
          // Usa a categoria correspondente ao tipo correto, evitando classificar INCOME como EXPENSE
-         const categoryId = type === 'EXPENSE' ? expenseCategory?.id : incomeCategory?.id;
+         const categoryId = finalType === 'EXPENSE' ? expenseCategory?.id : incomeCategory?.id;
 
          const mappedStatus = pluggyTx.status === 'PENDING' ? 'UNPAID' : 'PAID';
 
@@ -148,12 +156,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             account_id: targetAccountId,
             credit_card_id: targetCreditCardId,
             category_id: categoryId || null,
-            type: type,
+            type: finalType,
             description: pluggyTx.description || 'Transação Importada',
             amount: finalAmount,
             date: new Date(pluggyTx.date).toISOString().substring(0, 10), // Apenas 'YYYY-MM-DD'
             pluggy_transaction_id: pluggyTx.id,
-            status: mappedStatus
+            status: mappedStatus,
+            is_internal_transfer: classification.is_internal_transfer,
+            is_subscription: classification.is_subscription,
+            is_investment: classification.is_investment
          };
 
          // Realiza o Upsert. Se a transação já existir pelo pluggy_transaction_id, ele atualiza,

@@ -15,6 +15,9 @@ export interface Transaction {
   amount: number;
   date: string;
   notes?: string;
+  is_internal_transfer?: boolean;
+  is_subscription?: boolean;
+  is_investment?: boolean;
   created_at?: string;
   updated_at?: string;
   

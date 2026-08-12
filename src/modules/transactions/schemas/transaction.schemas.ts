@@ -11,6 +11,9 @@ export const transactionSchema = z.object({
   notes: z.string().optional(),
   status: z.enum(['PAID', 'UNPAID']).default('PAID'),
   installments: z.coerce.number().min(1).optional(),
+  is_internal_transfer: z.boolean().optional().default(false),
+  is_subscription: z.boolean().optional().default(false),
+  is_investment: z.boolean().optional().default(false),
 }).superRefine((data, ctx) => {
   if (!data.account_id && !data.credit_card_id) {
     ctx.addIssue({

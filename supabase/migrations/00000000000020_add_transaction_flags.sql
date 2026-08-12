@@ -1,0 +1,4 @@
+ALTER TABLE transactions 
+ADD COLUMN IF NOT EXISTS is_internal_transfer BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS is_subscription BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS is_investment BOOLEAN DEFAULT false;
