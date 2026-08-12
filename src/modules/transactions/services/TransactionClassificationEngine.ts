@@ -18,7 +18,8 @@ export class TransactionClassificationEngine {
     'resgate',
     'aplicação',
     'cartao',
-    'cartão'
+    'cartão',
+    'pagamento com saldo'
   ];
 
   private static readonly SUBSCRIPTION_KEYWORDS = [
