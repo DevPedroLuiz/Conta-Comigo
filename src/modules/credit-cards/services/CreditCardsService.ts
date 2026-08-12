@@ -137,9 +137,19 @@ export class CreditCardsService {
         }
       }
       
+      // Deduplicate invoices by year and month to prevent UI duplication bugs
+      const uniqueInvoicesMap = new Map();
+      for (const inv of existingInvoices) {
+        const key = `${inv.year}-${inv.month}`;
+        if (!uniqueInvoicesMap.has(key)) {
+          uniqueInvoicesMap.set(key, inv);
+        }
+      }
+      existingInvoices = Array.from(uniqueInvoicesMap.values());
+      
       existingInvoices = existingInvoices.sort((a, b) => {
-        if (a.year !== b.year) return a.year - b.year;
-        return a.month - b.month; // Month ascending
+        if (a.year !== b.year) return b.year - a.year;
+        return b.month - a.month; // Month descending
       });
       
       const invoiceIds = existingInvoices.map(i => i.id);
