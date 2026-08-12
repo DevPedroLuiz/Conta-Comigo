@@ -2,7 +2,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { PluggyClient } from 'pluggy-sdk';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { TransactionClassificationEngine } from '../src/modules/transactions/services/TransactionClassificationEngine';
+import { TransactionClassificationEngine } from '../src/modules/transactions/services/TransactionClassificationEngine.js';
 
 const PLUGGY_WEBHOOK_SECRET = process.env.PLUGGY_WEBHOOK_SECRET;
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;

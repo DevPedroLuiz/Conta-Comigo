@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { PluggyClient } from 'pluggy-sdk';
 import { createClient } from '@supabase/supabase-js';
-import { TransactionClassificationEngine } from '../src/modules/transactions/services/TransactionClassificationEngine';
+import { TransactionClassificationEngine } from '../src/modules/transactions/services/TransactionClassificationEngine.js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
